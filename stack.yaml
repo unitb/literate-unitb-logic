@@ -24,7 +24,9 @@ ghc-options:
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
-- ../utils/
+- location:
+    git: https://github.com/literate-unitb/literate-unitb-utils.git
+    commit: 1ed2c4ff0406b106b4aa5571069fc99b99e04980
 - location:
     git: https://github.com/literate-unitb/literate-unitb-latex.git
     commit: cf698b53b13fc472753f77cd9c8bd0e6d9a26fc0
@@ -33,7 +35,7 @@ packages:
     commit: e1bb9c7e183b3d6a17587e93eb8d8fe21ff9845a
 - location:
     git: https://github.com/literate-unitb/partial-order.git
-    commit: 86f32f093108560cef732ec4ea121616f4f0d968
+    commit: a742c8c1668054161841f00b8f048ad55dd6ee0b
 - location:
     git: https://github.com/literate-unitb/unitb-testing.git
     commit: e2012f9940e29e774323cd1b1c2cb360bb2ba5b7
@@ -45,7 +47,7 @@ packages:
     commit: 4d328e046a9406191e8f3613c6135613c75e3856
 - location:
     git: https://github.com/literate-unitb/show-with.git
-    commit: 5caa9c7798ff6648aa196bead95409c7fbe9e229
+    commit: 6be72dbe945cae0945dd18a835f56c7a807937a7
 - location:
     git: https://github.com/literate-unitb/printf-th.git
     commit: e7c85fc6f210516e9c66e1e7f6bf52996653629c
@@ -59,8 +61,11 @@ packages:
     git: https://github.com/literate-unitb/classy-lens-hierarchy.git
     commit: 405e85716d6bc967476dc74292f4edcf150d50e9
 - location:
+    git: https://github.com/literate-unitb/serialize-instances.git
+    commit: b79b6cfc7c7828225d25969814977d25192a1aba
+- location:
     git: https://github.com/literate-unitb/generic-instances.git
-    commit: 9c45c7caff4e93d0df96622ffb5238f04fa8b5af
+    commit: 7d7b13cf7a757862a540c71868ac973774128763
 - location:
     git: https://github.com/literate-unitb/data-map-class.git
     commit: f1672a380d7f069ccc080c2380554acf0b2bf258
@@ -78,7 +83,7 @@ packages:
     commit: 742ac9f6e4f369881b4354906c19e65ea75d97b1
 - location:
     git: https://github.com/literate-unitb/data-packaged.git
-    commit: 42cfacafc58ed6d195babb02b70057262193271d
+    commit: 85ec95cacaf57663f194e7f0d8bf204ef3f942ad
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps: 
 - assert-0.0.1.2
