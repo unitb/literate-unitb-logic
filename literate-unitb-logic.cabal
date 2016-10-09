@@ -128,4 +128,24 @@ library
   
   -- Base language which the package is written in.
   default-language:    Haskell2010
-  
+
+test-suite test
+   ghc-options: -W -fwarn-missing-signatures 
+         -fwarn-incomplete-uni-patterns
+         -fwarn-missing-methods
+         -threaded  -fno-ignore-asserts
+         -fwarn-tabs
+         -j8
+   type: exitcode-stdio-1.0
+   hs-source-dirs: suite
+   default-language:    Haskell2010
+   main-is: test.hs
+   build-depends:       base >= 4.8 && < 5,
+                        shelly, directory >= 1.2.2.0, 
+                        literate-unitb-utils,
+                        literate-unitb-logic,
+                        literate-unitb-latex,
+                        unitb-testing,
+                        lens, axiomatic-classes
+   default-language:    Haskell2010
+   default-extensions:  TupleSections, DeriveFunctor, DeriveGeneric, DeriveFoldable, RankNTypes, MultiParamTypeClasses, GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, DeriveDataTypeable, TypeSynonymInstances, DefaultSignatures, DeriveTraversable, FunctionalDependencies, ImplicitParams
