@@ -29,7 +29,7 @@ packages:
     commit: 1ed2c4ff0406b106b4aa5571069fc99b99e04980
 - location:
     git: https://github.com/literate-unitb/literate-unitb-latex.git
-    commit: cf698b53b13fc472753f77cd9c8bd0e6d9a26fc0
+    commit: 047e276093d8310574261048eaf42d780938db69
 - location:
     git: https://github.com/literate-unitb/existential.git
     commit: e1bb9c7e183b3d6a17587e93eb8d8fe21ff9845a
