@@ -56,7 +56,7 @@ packages:
     commit: 643c833aa8836b23d8057cbbf410a9deedc76026
 - location:
     git: https://github.com/literate-unitb/invariants.git
-    commit: fe80d6e750e8cffba3a9d8cf2b4d34650aca4059
+    commit: adf1145cdcab415698dd7d3c179f6d0a1a0948ff
 - location:
     git: https://github.com/literate-unitb/classy-lens-hierarchy.git
     commit: 405e85716d6bc967476dc74292f4edcf150d50e9
@@ -72,9 +72,6 @@ packages:
 - location:
     git: https://github.com/literate-unitb/lens-extra.git
     commit: 2a54572aa21db03adb8c161e5755892803a1808b
-- location:
-    git: https://github.com/literate-unitb/th-lift-deriving.git
-    commit: 3efb6a9358cae2bd47606b59a97dad3ddd84ffae
 - location:
     git: https://github.com/literate-unitb/bipartite-graph.git
     commit: d8be3b96a947bbf05362e919cca7a85c4a16bbc2
