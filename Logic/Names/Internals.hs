@@ -16,6 +16,7 @@ import Control.Precondition
 import Data.Char
 import Data.Data
 import Data.Either.Combinators
+import Data.Hashable
 import Data.List as L
 import Data.List.Lens as L
 import qualified Data.List.Ordered as Ord
@@ -24,7 +25,7 @@ import Data.List.NonEmpty as NE
 #else
 import Data.List.NonEmpty as NE hiding (unlines)
 #endif
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import Data.Serialize
 import Data.Semigroup hiding (option)
 import Data.Tuple
@@ -46,7 +47,6 @@ import Text.Pretty
 import Text.Printf.TH
 
 import Utilities.Language  as Lang
-import Utilities.Table
 
 type NEString = NonEmpty Char
 
@@ -158,8 +158,8 @@ instance IsName InternalName where
     fromInternal = id
     fromName = asInternal
 
-fresh :: IsBaseName n => n -> Table n b -> n
-fresh name xs = L.head $ ys `Ord.minus` M.ascKeys xs
+fresh :: IsBaseName n => n -> M.Map n b -> n
+fresh name xs = L.head $ ys `Ord.minus` M.keys xs
     where
         ys = generateNames name
 

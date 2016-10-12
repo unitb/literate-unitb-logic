@@ -42,17 +42,15 @@ import Control.Precondition
 import           Data.Either
 import           Data.List as L hiding ( union )
 import           Data.List.Ordered hiding (nub)
-import           Data.Map.Class as M 
+import           Data.Map as M 
                     hiding ( map, union, unions, (\\) )
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import qualified Data.Maybe as MM
 import qualified Data.Set as S 
 
 import Prelude as L
 
 import Text.Printf.TH
-
-import Utilities.Table
 
 suffix_generics :: String -> GenericType -> GenericType
 suffix_generics _  v@(VARIABLE _)      = v
@@ -534,7 +532,7 @@ gen_to_fol types lbl e = map (f &&& inst) xs
                     strip_generics $ e' m
         e' m   = substitute_type_vars (M.map as_generic m) e
         xs     = match_all pat (S.elems types)
-        f xs   = composite_label [lbl, label $ concatMap z3_decoration $ M.ascElems xs]
+        f xs   = composite_label [lbl, label $ concatMap z3_decoration $ M.elems xs]
         pat    = patterns e
 
 to_fol_ctx :: forall q n. (IsQuantifier q,IsName n)
@@ -678,7 +676,7 @@ names :: Pre
       => String -> [Name]
 names n = map (makeName . (n ++) . show) [0 :: Int ..]
 
-vars_to_sorts :: Table Name Sort -> AbsExpr n Type q -> AbsExpr n FOType q
+vars_to_sorts :: M.Map Name Sort -> AbsExpr n Type q -> AbsExpr n FOType q
 vars_to_sorts sorts e = evalState (vars_to_sorts_aux e) (new_sorts, empty)
     where
         new_sorts = map as_type $ names "G" `minus` keys sorts

@@ -17,6 +17,7 @@ import           Prelude.Extras hiding (Lift1)
 -- #else
 -- import           Data.Functor.Classes
 #endif
+import           Data.Map
 import           Data.Serialize
 import           Data.Typeable
 
@@ -24,20 +25,18 @@ import GHC.Generics hiding ((:+:),prec)
 
 import Test.QuickCheck.ZoomEq
 
-import Utilities.Table
-
 type Theory = Theory' Expr
 data Theory' expr = Theory 
         { _theory'Name :: Name
-        , _extends    :: Table Name Theory
-        , _types      :: Table Name Sort
-        , _funs       :: Table Name Fun
-        , _theory'Defs :: Table Name Def
-        , _consts     :: Table Name Var
-        , _theory'Dummies :: Table Name Var 
+        , _extends    :: Map Name Theory
+        , _types      :: Map Name Sort
+        , _funs       :: Map Name Fun
+        , _theory'Defs :: Map Name Def
+        , _consts     :: Map Name Var
+        , _theory'Dummies :: Map Name Var 
         , _theory'SyntacticThm :: SyntacticProp
-        , _fact       :: Table Label expr
-        , _theorems   :: Table Label (Maybe Proof)
+        , _fact       :: Map Label expr
+        , _theorems   :: Map Label (Maybe Proof)
         , _thm_depend :: [ (Label,Label) ]
         , _notation   :: Notation }
     deriving ( Eq, Show, Typeable, Generic, Functor
@@ -48,7 +47,7 @@ makeFields ''Theory'
 mkCons ''Theory'
 
 -- #if MIN_VERSION_transformers(0,5,0)
--- instance Ord k => F.Eq1 (Table k) where
+-- instance Ord k => F.Eq1 (Map k) where
 --     liftEq eq m0 m1 = F.liftEq eq' (toList m0) (toList m1)
 --         where
 --             eq' (x0,x1) (y0,y1) = x0 == y0 && eq x1 y1

@@ -34,15 +34,13 @@ import Control.Lens hiding (Context,from,to,rewriteM)
 
 import           Data.Foldable as F
 import           Data.List as L
-import           Data.Map.Class as M 
-
-import Utilities.Table
+import           Data.Map as M 
 
 all_theories :: Theory -> [Theory]
-all_theories th = th : M.ascElems (all_theories' th)
+all_theories th = th : M.elems (all_theories' th)
 
-all_theories' :: Theory -> Table Name Theory
-all_theories' th = M.unions $ view extends th : M.ascElems (M.map all_theories' $ view extends th)
+all_theories' :: Theory -> M.Map Name Theory
+all_theories' th = M.unions $ view extends th : M.elems (M.map all_theories' $ view extends th)
 
 basic_theory :: Theory
 basic_theory = make_theory' "basic" $ do 
@@ -86,7 +84,7 @@ basic_theory = make_theory' "basic" $ do
 
 th_notation :: Theory -> Notation
 th_notation th = th_notation' ths
-    where ths = th : ascElems (_extends th)
+    where ths = th : elems (_extends th)
 
 th_notation' :: Foldable f => f Theory -> Notation
 th_notation' ths = res
@@ -97,7 +95,7 @@ th_notation' ths = res
 theory_ctx :: Theory -> Context
 theory_ctx th = 
         merge_all_ctx $
-            (Context ts c new_fun (th^.defs) dums) : L.map theory_ctx (M.ascElems d)
+            (Context ts c new_fun (th^.defs) dums) : L.map theory_ctx (M.elems d)
     where
         d      = _extends th
         ts     = _types th
@@ -107,9 +105,9 @@ theory_ctx th =
         new_fun = fun
 
     -- todo: prefix name of theorems of a z3_decoration
-theory_facts :: Theory -> Table Label Expr
+theory_facts :: Theory -> M.Map Label Expr
 theory_facts th = 
-        merge_all (new_fact : L.map theory_facts (M.ascElems d))
+        merge_all (new_fact : L.map theory_facts (M.elems d))
     where
         d      = _extends th
         facts  = _fact th

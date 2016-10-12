@@ -14,7 +14,8 @@ import Control.Lens hiding (rewrite,Context
 import Control.Precondition
 
 import Data.Data
-import Data.Map.Class as M
+import Data.Hashable
+import Data.Map as M
 import Data.Serialize
 
 import GHC.Generics.Instances
@@ -23,7 +24,6 @@ import Test.QuickCheck
 import Test.QuickCheck.ZoomEq
 
 import Utilities.Functor
-import Utilities.Table
 
 type UntypedVar = AbsVar Name ()
 
@@ -66,12 +66,12 @@ instance (TypeSystem t, IsName n) => PrettyPrintable (AbsVar n t) where
 instance Functor1 AbsVar where
 instance Foldable1 AbsVar where
 instance Traversable1 AbsVar where
-    traverse1 f (Var n t) = Var <$> f n <*> pure t
+    traverseOn1 f g (Var n t) = Var <$> f n <*> g t
 
 prime :: IsName n => AbsVar n t -> AbsVar n t
 prime (Var n t) = Var (addPrime n) t
 
-primeAll :: IsName n => Table n (AbsVar n t) -> Table n (AbsVar n t)
+primeAll :: IsName n => Map n (AbsVar n t) -> Map n (AbsVar n t)
 primeAll m = M.mapKeys addPrime $ M.map prime m
 
 z3Var :: Pre

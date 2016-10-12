@@ -18,16 +18,15 @@ import           Control.Monad.Trans.Maybe
 import qualified Control.Monad.Trans.Reader as R
 
 import           Data.List as L
-import           Data.Map.Class as M hiding ( map )
-import qualified Data.Map.Class as M
+import           Data.Map as M hiding ( map )
+import qualified Data.Map as M
 
 import Utilities.Syntactic
-import Utilities.Table
 
 data Param = Param 
     { context   :: Context
     , notation  :: Notation
-    , variables :: Table Name UntypedExpr
+    , variables :: Map Name UntypedExpr
     }
 
 data Parser a = Parser { fromParser :: MaybeT (R.ReaderT Param (Scanner ExprToken)) a }
@@ -157,7 +156,7 @@ runParser' p = runParserWith $ Param
         defs = ctx^.definitions
             
 runParser :: Context -> Notation 
-          -> Table Name UntypedExpr
+          -> Map Name UntypedExpr
           -> Parser a 
           -> Scanner ExprToken a
 runParser x y w m = runParserWith (Param x y w) m

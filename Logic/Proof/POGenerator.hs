@@ -30,17 +30,16 @@ import Control.Monad.Reader.Class
 import Control.Monad.RWS hiding ((<>))
 import Control.Monad.State
 
-import Data.DList as D
-import Data.List  as L
-import Data.Map.Class as M hiding ( map )
-import qualified Data.Map.Class as M
-import Data.Semigroup
+import           Data.DList as D
+import           Data.List  as L
+import           Data.Map as M hiding ( map )
+import qualified Data.Map as M
+import           Data.Semigroup
 
 import GHC.Generics.Instances
 
 import Text.Printf.TH
 
-import Utilities.Table
 import Utilities.Trace
 
 data POParam = POP 
@@ -48,7 +47,7 @@ data POParam = POP
     , tag :: DList Label
     , _pOParamTimeout  :: Maybe Float
     , _pOParamNameless :: DList Expr
-    , _pOParamNamed :: Table Label Expr
+    , _pOParamNamed :: M.Map Label Expr
     , _pOParamSynProp  :: SyntacticProp
     } deriving (Generic)
 
@@ -89,7 +88,7 @@ existential [] cmd = cmd
 existential vs (POGen cmd) = do
         let g (_, Sequent _ _ ctx _ h0 h1 goal) = do
                     vs <- f ctx
-                    return $ zforall vs ztrue $ zall (h0 ++ M.ascElems h1) `zimplies` goal
+                    return $ zforall vs ztrue $ zall (h0 ++ M.elems h1) `zimplies` goal
             f (Context s vs fs def _) 
                 | not $ M.null s = error "existential: cannot add sorts in existentials"
                 --      not (M.null fs) 
@@ -97,7 +96,7 @@ existential vs (POGen cmd) = do
                 | otherwise = do
                     E.definitions %= merge def
                     E.functions %= merge fs
-                    return $ M.ascElems vs
+                    return $ M.elems vs
             -- f xs = [(tag, zexists vs ztrue $ zall $ map snd xs)]
         ss <- POGen 
             $ censor (const D.empty) $ listen 
@@ -136,11 +135,11 @@ _context :: Context -> POCtx ()
 _context new_ctx = POCtx $ do
     S.context %= (new_ctx `merge_ctx`)
 
-functions :: Table Name Fun -> POCtx ()
+functions :: M.Map Name Fun -> POCtx ()
 functions new_funs = do
     _context $ Context M.empty M.empty new_funs M.empty M.empty
 
-definitions :: Table Name Def -> POCtx ()
+definitions :: M.Map Name Def -> POCtx ()
 definitions new_defs = POCtx $ do
     S.context.E.definitions .= new_defs
 
@@ -155,7 +154,7 @@ prefix_label lbl = POCtx $ do
 prefix :: String -> POCtx ()
 prefix lbl = prefix_label $ label lbl
 
-named_hyps :: HasExpr expr => Table Label expr -> POCtx ()
+named_hyps :: HasExpr expr => M.Map Label expr -> POCtx ()
 named_hyps hyps = POCtx $ do
         named %= M.union (M.map getExpr hyps)
 
@@ -163,11 +162,11 @@ nameless_hyps :: HasExpr expr => [expr] -> POCtx ()
 nameless_hyps hyps = POCtx $ do
         nameless <>= D.fromList (L.map getExpr hyps)
 
-variables :: Table Name Var -> POCtx ()
+variables :: M.Map Name Var -> POCtx ()
 variables vars = POCtx $ do
         S.context.constants %= (vars `merge`)
 
-eval_generator :: POGen () -> Table Label Sequent
+eval_generator :: POGen () -> M.Map Label Sequent
 eval_generator cmd = runIdentity $ eval_generatorT cmd
 
 tracePOG :: Monad m => POGenT m () -> POGenT m ()
@@ -175,7 +174,7 @@ tracePOG (POGen cmd) = POGen $ do
     xs <- snd <$> listen cmd
     traceM $ unlines $ L.map (show . second (view goal)) (D.toList xs)
 
-eval_generatorT :: Monad m => POGenT m () -> m (Table Label Sequent)
+eval_generatorT :: Monad m => POGenT m () -> m (M.Map Label Sequent)
 eval_generatorT cmd = 
             liftM (fromListWithKey combine . D.toList . snd) 
                 $ evalRWST (runPOGen cmd) empty_param ()

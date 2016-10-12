@@ -19,7 +19,7 @@ import Control.Lens.Misc
 
 import           Data.Data
 import           Data.Default
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import           Data.PartialOrd
 import           Data.Semigroup
 import           Data.Serialize
@@ -33,7 +33,6 @@ import Test.QuickCheck.ZoomEq
 import Text.Pretty
 
 import Utilities.Functor
-import Utilities.Table
 
 type Context = AbsContext GenericType HOQuantifier
 
@@ -46,11 +45,11 @@ type FOContext = GenContext InternalName FOType FOQuantifier
 type AbsContext = GenContext Name
 
 data GenContext name t q = Context
-        { _genContextSorts :: Table Name Sort
-        , _genContextConstants :: Table name (AbsVar name t)
-        , _functions :: Table name (AbsFun name t)
-        , _definitions :: Table name (AbsDef name t q)
-        , _genContextDummies :: Table name (AbsVar name t)
+        { _genContextSorts :: M.Map Name Sort
+        , _genContextConstants :: M.Map name (AbsVar name t)
+        , _functions :: M.Map name (AbsFun name t)
+        , _definitions :: M.Map name (AbsDef name t q)
+        , _genContextDummies :: M.Map name (AbsVar name t)
         }
     deriving (Show,Eq,Generic,Typeable,Functor,Foldable,Traversable)
 
@@ -67,7 +66,7 @@ defsAsVars = execState $ do
         constants %= M.union defs
 
 class HasSymbols a b n | a -> b n where
-    symbols :: a -> Table n b
+    symbols :: a -> M.Map n b
 
 instance (PrettyPrintable n,PrettyPrintable t,PrettyPrintable q
          , IsName n, IsQuantifier q, TypeSystem t) 
@@ -78,7 +77,7 @@ instance (PrettyPrintable n,PrettyPrintable t,PrettyPrintable q
          , IsName n, IsQuantifier q, TypeSystem t) 
         => PrettyRecord (GenContext n t q) where
 
-instance (Ord n,Hashable n) => HasSymbols (GenContext n t q) () n where
+instance (Ord n) => HasSymbols (GenContext n t q) () n where
     symbols ctx = M.unions [f a,f b,f c]
         where
             (Context _ a b c _) = ctx^.genContext
@@ -118,17 +117,17 @@ data CtxConflict n t q = CtxWith
             , declaration :: GenContext n t q }
     deriving (Generic)
 
-instance (Ord n,Hashable n) => Semigroup (GenContext n t q) where
-instance (Ord n,Hashable n) => Monoid (GenContext n t q) where
+instance (Ord n) => Semigroup (GenContext n t q) where
+instance (Ord n) => Monoid (GenContext n t q) where
     mempty  = genericMEmpty
     mconcat = genericMConcat
     mappend = genericMAppend
-instance (Ord n,Hashable n) => Semigroup (Intersection (GenContext n t q)) where
+instance (Ord n) => Semigroup (Intersection (GenContext n t q)) where
     (<>) = genericSemigroupMAppendWith
     sconcat = genericSemigroupMConcatWith
 
-instance (Ord n,Hashable n) => Semigroup (CtxConflict n t q) where
-instance (Ord n,Hashable n) => Monoid (CtxConflict n t q) where
+instance (Ord n) => Semigroup (CtxConflict n t q) where
+instance (Ord n) => Monoid (CtxConflict n t q) where
     mempty  = def
     mappend c0 c1 = CtxWith 
         { conflict = mconcat [conflict c0,conflict c1
@@ -163,7 +162,7 @@ empty_ctx = def
 --    where
 --        ctx' = mconcat $ CtxWith def <$> cs
 
-free_vars :: Context -> Expr -> Table Name Var
+free_vars :: Context -> Expr -> M.Map Name Var
 free_vars (Context _ _ _ _ dum) e = M.fromList $ runReader (f e) dum
     where
         f (Word v) = do
@@ -197,11 +196,11 @@ instance Foldable1 (GenContext n) where
 --instance Foldable2 GenContext where
 
 instance Traversable1 (GenContext n) where
-    traverse1 f (Context a b c d e) = Context a 
-            <$> (traverse.traverse) f b
-            <*> (traverse.traverse) f c
-            <*> (traverse.traverse1) f d
-            <*> (traverse.traverse) f e
+    traverseOn1 f g (Context a b c d e) = Context a 
+            <$> traverse (traverseOn1 pure f) b
+            <*> traverse (traverse f) c
+            <*> traverse (traverseOn1 f g) d
+            <*> traverse (traverse f) e
 instance IsName n => HasNames (GenContext n t q) n where
     type SetNameT m (GenContext n t q) = GenContext m t q
     namesOf f (Context a b c d e) = Context a 

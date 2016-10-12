@@ -11,7 +11,7 @@ import Logic.Theory
 import Control.Lens
 import Control.Lens.Misc
 
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 
 import Prelude hiding ( pred )
 

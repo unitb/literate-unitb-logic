@@ -16,7 +16,7 @@ import Control.Monad.RWS
 import Control.Precondition
 
 import           Data.List
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import           Data.Typeable
 import           Data.Tuple
 
@@ -24,19 +24,17 @@ import GHC.Stack
 
 import Prelude
 
-import Utilities.Table
-
 import System.IO
 
 import Test.UnitTest
 
 import Text.Printf.TH
 
-data POCase = POCase String (IO (String, Table Label Sequent)) String
+data POCase = POCase String (IO (String, M.Map Label Sequent)) String
 
 poCase :: Pre
        => String 
-       -> IO (String, Table Label Sequent) 
+       -> IO (String, M.Map Label Sequent) 
        -> String
        -> TestCase
 poCase n test res = WithLineInfo (?loc) $ Other $ POCase n test res
@@ -74,13 +72,13 @@ instance IsTestCase POCase where
                 }
     nameOf f (POCase n test res) = (\n' -> POCase n' test res) <$> f n
 
-print_po :: Table Label Sequent -> CallStack -> String -> String -> String -> M ()
+print_po :: M.Map Label Sequent -> CallStack -> String -> String -> String -> M ()
 print_po pos cs name actual expected = do
     n <- get
     liftIO $ do
         let ma = f actual
             me = f expected
-            f :: String -> Table String Bool
+            f :: String -> M.Map String Bool
             f xs = M.map (== "  o  ") $ M.fromList $ map (swap . splitAt 5) $ lines xs
             mr = M.keys $ M.filter not $ M.unionWith (==) (me `M.intersection` ma) ma
         forM_ (zip [0..] mr) $ \(i,po) -> do

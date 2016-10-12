@@ -25,7 +25,7 @@ import Control.Precondition
 import           Data.Either
 import           Data.Either.Combinators
 import           Data.List as L
-import           Data.Map.Class as M
+import           Data.Map as M
 import qualified Data.Set as S
 import           Data.Typeable
 
@@ -34,7 +34,6 @@ import Language.Haskell.TH hiding (Type,Name)
 import Text.Printf.TH
 
 import Utilities.Error
-import Utilities.Table
 import Utilities.Tuple
 
 class Signature s where
@@ -355,7 +354,7 @@ withForall mx = do
 axiom :: ExpQ
 axiom = withLoc 'declAxiom
 
-axioms :: String -> Writer [ExprP] () -> Table Label Expr
+axioms :: String -> Writer [ExprP] () -> M.Map Label Expr
 axioms name cmd
         | L.null ls = fromList $ L.map (first $ label . [printf|@%s@@_%s|] name) $ zip ns rs
         | otherwise = error $ unlines $ concat ls

@@ -67,7 +67,7 @@ import System.Process
 
 import Text.Printf
 
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 
 total_caps :: SSem
 total_caps = unsafePerformIO $ new $ z3c_capacity z3_config

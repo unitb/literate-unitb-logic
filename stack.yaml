@@ -26,7 +26,7 @@ packages:
 - '.'
 - location:
     git: https://github.com/literate-unitb/literate-unitb-utils.git
-    commit: 1ed2c4ff0406b106b4aa5571069fc99b99e04980
+    commit: cdb6ae0c50687e02b96507b47b62f62bcc9c371b
 - location:
     git: https://github.com/literate-unitb/literate-unitb-latex.git
     commit: 047e276093d8310574261048eaf42d780938db69
@@ -35,7 +35,7 @@ packages:
     commit: e1bb9c7e183b3d6a17587e93eb8d8fe21ff9845a
 - location:
     git: https://github.com/literate-unitb/partial-order.git
-    commit: a742c8c1668054161841f00b8f048ad55dd6ee0b
+    commit: 0f1629aa99c0a74bccd4e98e63960361175d16c6
 - location:
     git: https://github.com/literate-unitb/unitb-testing.git
     commit: e2012f9940e29e774323cd1b1c2cb360bb2ba5b7
@@ -56,10 +56,10 @@ packages:
     commit: 643c833aa8836b23d8057cbbf410a9deedc76026
 - location:
     git: https://github.com/literate-unitb/invariants.git
-    commit: adf1145cdcab415698dd7d3c179f6d0a1a0948ff
+    commit: 4e406aa7bb9f144f78c85e753a2f41c2b291e59e
 - location:
     git: https://github.com/literate-unitb/classy-lens-hierarchy.git
-    commit: 405e85716d6bc967476dc74292f4edcf150d50e9
+    commit: 6c4edc765a66f10d4a6cd2f1a7490e91a2673704
 - location:
     git: https://github.com/literate-unitb/serialize-instances.git
     commit: b79b6cfc7c7828225d25969814977d25192a1aba
@@ -67,14 +67,11 @@ packages:
     git: https://github.com/literate-unitb/generic-instances.git
     commit: 8d67a6479d3b5a38c69efd114c1d59d2b81c813c
 - location:
-    git: https://github.com/literate-unitb/data-map-class.git
-    commit: f1672a380d7f069ccc080c2380554acf0b2bf258
-- location:
     git: https://github.com/literate-unitb/lens-extra.git
     commit: 2a54572aa21db03adb8c161e5755892803a1808b
 - location:
     git: https://github.com/literate-unitb/bipartite-graph.git
-    commit: d8be3b96a947bbf05362e919cca7a85c4a16bbc2
+    commit: 7ab97d0f1c5bc1e62a835438fd5e6e1171eb31cd
 - location:
     git: https://github.com/literate-unitb/pretty-printable.git
     commit: 742ac9f6e4f369881b4354906c19e65ea75d97b1

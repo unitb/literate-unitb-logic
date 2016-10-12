@@ -42,7 +42,7 @@ import Control.Monad.Trans.Either
 import           Data.Graph hiding (Table)
 import           Data.List as L
 import qualified Data.List.Ordered as OL
-import           Data.Map.Class  as M
+import           Data.Map  as M
 import qualified Data.Set  as S
 import           Data.Tuple
 
@@ -51,12 +51,11 @@ import Text.Printf.TH
 import Utilities.Error
 import Utilities.Graph hiding ( map )
 import Utilities.Syntactic ( Error (..), LineInfo )
-import Utilities.Table
 
 data TacticParam = TacticParam 
     { _sequent :: Sequent
     , _line_info :: LineInfo
-    , _theorems  :: Table Label Expr
+    , _theorems  :: Map Label Expr
     }
 
 makeLenses ''TacticParam
@@ -152,7 +151,7 @@ get_goal = TacticT $ do
         view $ sequent.goal
 
 get_named_hyps :: Monad m
-               => TacticT m (Table Label Expr)
+               => TacticT m (Map Label Expr)
 get_named_hyps = TacticT $ do 
         view $ sequent.named
 
@@ -561,7 +560,7 @@ runTacticT li s (TacticT tac) = do
 
 runTacticTWithTheorems :: Monad m
                        => LineInfo -> Sequent
-                       -> Table Label Expr
+                       -> Map Label Expr
                        -> TacticT m a -> m (Either [Error] (a,[Label]))
 runTacticTWithTheorems li s thms (TacticT tac) = do
         (x,_,thms) <- runRWST (runErrorT tac) (TacticParam s li thms) (S.empty,S.empty)
@@ -574,7 +573,7 @@ runTactic :: LineInfo -> Sequent -> Tactic a -> Either [Error] a
 runTactic li s tac = runIdentity (runTacticT li s tac)
 
 runTacticWithTheorems :: LineInfo -> Sequent 
-                      -> Table Label Expr
+                      -> Map Label Expr
                       -> Tactic a -> Either [Error] (a, [Label])
 runTacticWithTheorems li s thms tac = runIdentity (runTacticTWithTheorems li s thms tac)
           

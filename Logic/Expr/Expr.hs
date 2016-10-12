@@ -33,7 +33,7 @@ import Control.Precondition
 import           Data.Data
 import           Data.Hashable
 import           Data.List as L
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import           Data.Serialize
 import qualified Data.Set as S
 
@@ -48,7 +48,6 @@ import Test.QuickCheck.ZoomEq
 import Text.Printf.TH
 
 import Utilities.Functor
-import Utilities.Table
 
 type Expr = AbsExpr Name GenericType HOQuantifier
 
@@ -74,7 +73,7 @@ data GenExpr n t a q =
         | Cast !CastType !(GenExpr n t a q) !a
         | Lift !(GenExpr n t a q) !a
     deriving (Eq,Ord,Typeable,Data,Generic,Show,Functor,Foldable,Traversable)
-type RecFields expr = Table Field expr
+type RecFields expr = M.Map Field expr
 
 data RecordExpr expr =
         RecLit !(RecFields expr)
@@ -185,45 +184,23 @@ traverseRecExpr f (RecUpdate x m) =
 traverseRecExpr f (FieldLookup x field) = liftA2 FieldLookup (f x) (pure field)
 
 instance Traversable1 (GenExpr a b) where
-    traverse1 _ (Word v) = pure $ Word v
-    traverse1 _ (Lit v t)  = pure $ Lit v t
-    traverse1 f (Cast b e t) = Cast b <$> traverse1 f e <*> f t
-    traverse1 f (Lift e t) = Lift <$> traverse1 f e <*> f t
-    traverse1 f (FunApp fun e) = liftA2 funApp (traverse f fun) ((traverse.traverse1) f e)
-    traverse1 f (Binder a b c d e) = binder a b <$> traverse1 f c 
-                                                <*> traverse1 f d 
-                                                <*> pure e
-    traverse1 f (Record x t) = Record <$> traverseRecExpr (traverse1 f) x
-                                      <*> pure t
-
 instance Traversable2 (GenExpr a) where
-    traverse2 f (Word v) = Word <$> traverse f v
-    traverse2 f (Lit v t)  = Lit v <$> f t
-    traverse2 f (Cast b e t) = Cast b <$> traverse2 f e <*> pure t
-    traverse2 f (Lift e t) = Lift <$> traverse2 f e <*> pure t
-    traverse2 f (FunApp fun e) = funApp fun 
-                                        <$> (traverse.traverse2) f e
-    traverse2 f (Binder a b c d e) = binder a <$> (traverse.traverse) f b
-                                              <*> traverse2 f c 
-                                              <*> traverse2 f d
-                                              <*> f e
-    traverse2 f (Record x t) = Record 
-          <$> traverseRecExpr (traverse2 f) x
-          <*> f t
 
 instance Traversable3 GenExpr where
-    traverse3 f (Word v) = Word <$> traverse1 f v
-    traverse3 _ (Lit v t) = pure $ Lit v t
-    traverse3 f (Cast b e t) = Cast b <$> traverse3 f e <*> pure t
-    traverse3 f (Lift e t) = Lift <$> traverse3 f e <*> pure t
-    traverse3 f (FunApp fun e) = funApp <$> traverse1 f fun <*> (traverse.traverse3) f e
-    traverse3 f (Binder a b c d e) = binder a <$> (traverse.traverse1) f b
-                                              <*> traverse3 f c
-                                              <*> traverse3 f d
-                                              <*> pure e
-    traverse3 f (Record x t) = Record 
-          <$> traverseRecExpr (traverse3 f) x
-          <*> pure t
+    traverseOn3 f g _ _ (Word v) = Word <$> traverseOn1 f g v
+    traverseOn3 _ g _ _ (Lit v t) = Lit v <$> g t
+    traverseOn3 f g h p (Cast b e t) = Cast b <$> traverseOn3 f g h p e <*> h t
+    traverseOn3 f g h p (Lift e t) = Lift <$> traverseOn3 f g h p e <*> h t
+    traverseOn3 f g h p (FunApp fun e) = funApp <$> traverseOn1 f h fun <*> traverse (traverseOn3 f g h p) e
+    traverseOn3 f g h p (Binder a b c d e) = binder
+                                              <$> p a
+                                              <*> traverse (traverseOn1 f g) b
+                                              <*> traverseOn3 f g h p c
+                                              <*> traverseOn3 f g h p d
+                                              <*> g e
+    traverseOn3 f g h p (Record x t) = Record 
+          <$> traverseRecExpr (traverseOn3 f g h p) x
+          <*> g t
 
 instance (IsName n) => Translatable 
         (GenExpr n t a q) 
@@ -232,7 +209,7 @@ instance (IsName n) => Translatable
 
 make_unique :: (IsGenExpr expr, Name ~ NameT expr,Pre)
             => String               -- suffix to be added to the name of variables
-            -> Table Name var       -- set of variables that must renamed
+            -> M.Map Name var       -- set of variables that must renamed
             -> expr                 -- expression to rewrite
             -> expr
 make_unique suf vs = freeVarsOf.namesOf %~ newName
@@ -365,12 +342,12 @@ typeOfRecord (RecUpdate x m) = recordTypeOfFields $
               M.map type_of m `M.union` fromJust' (type_of x^?fieldTypes) 
 typeOfRecord (FieldLookup x field) = fromJust' (type_of x^?fieldTypes.ix field)
 
-fieldTypes :: TypeSystem t => Prism' t (Table Field t)
+fieldTypes :: TypeSystem t => Prism' t (M.Map Field t)
 fieldTypes =  _FromSort.swapped.below _RecordSort
             . iso (\(ts,m) -> m & unsafePartsOf traverse .~ ts) 
                   (\m -> (M.elems m,() <$ m))
 
-recordTypeOfFields :: (Typed e, t ~ TypeOf e,TypeSystem t) => Table Field e -> t
+recordTypeOfFields :: (Typed e, t ~ TypeOf e,TypeSystem t) => M.Map Field e -> t
 recordTypeOfFields m = make_type (RecordSort $ () <$ m) $ type_of <$> M.elems m
 
 ztuple_type :: TypeSystem t => [t] -> t
@@ -400,8 +377,8 @@ freeVarsOf :: IsGenExpr expr
 freeVarsOf f = freeVarsOf'' (const f) M.empty
 
 freeVarsOf'' :: (IsGenExpr expr, n ~ NameT expr,Applicative f) 
-             => (Table n (VarT expr) -> VarT expr -> f (VarT expr))
-             -> Table n (VarT expr)
+             => (M.Map n (VarT expr) -> VarT expr -> f (VarT expr))
+             -> M.Map n (VarT expr)
              -> expr -> f expr
 freeVarsOf'' f vs (Word v) | (v^.name) `M.member` vs = pure (Word v)
                            | otherwise       = Word <$> f vs v
@@ -465,18 +442,14 @@ instance Foldable1 (AbsDef n) where
 instance Foldable2 AbsDef where
 
 instance Traversable1 (AbsDef n) where
-    traverse1 f (Def a b c d e) = makeDef
-        <$> traverse f a
-        <*> pure b 
-        <*> (traverse.traverse) f c 
-        <*> f d 
-        <*> typesOf' f e
 instance Traversable2 AbsDef where
-    traverse2 f (Def a b c d e) = makeDef a 
-        <$> f b
-        <*> (traverse.traverse1) f c
-        <*> pure d 
-        <*> traverse3 f e
+    traverseOn2 f g h (Def a b c d e) = 
+        makeDef 
+          <$> traverse g a 
+          <*> f b
+          <*> traverse (traverseOn1 f g) c
+          <*> g d 
+          <*> traverseOn3 f g g h e
 
 instance IsName n => HasNames (AbsDef n t q) n where
     type SetNameT m (AbsDef n t q) = AbsDef m t q
@@ -492,7 +465,7 @@ z3Def ts n = makeDef ts (z3Name n)
 lookupFields :: ( IsName n,TypeSystem t,TypeSystem a
                 , Pre
                 , TypeAnnotationPair t a,IsQuantifier q) 
-             => GenExpr n t a q -> Table Field (GenExpr n t a q)
+             => GenExpr n t a q -> M.Map Field (GenExpr n t a q)
 lookupFields e = fromJust' $ type_of e^?fieldTypes >>= fieldLookupMap
     where
       fieldLookupMap = itraverse $ \f _ -> mkRecord $ FieldLookup e f
@@ -654,10 +627,8 @@ instance HasScope Expr where
         let free = used_var' e
         areVisible [vars,constants] free e
 
-{-# SPECIALIZE merge :: (Ord k,Eq a,Show k,Show a) => M.Map k a -> M.Map k a -> M.Map k a #-}
-{-# SPECIALIZE merge :: (M.IsKey Table k,Eq a,Show k,Show a) => Table k a -> Table k a -> Table k a #-}
-merge :: (M.IsKey map k, Eq a, Show k, Show a,M.IsMap map)
-          => map k a -> map k a -> map k a
+merge :: (Ord k, Eq a, Show k, Show a)
+          => M.Map k a -> M.Map k a -> M.Map k a
 merge m0 m1 = M.unionWithKey f m0 m1
     where
         f k x y
@@ -665,8 +636,8 @@ merge m0 m1 = M.unionWithKey f m0 m1
             | otherwise = error $ [printf|conflicting declaration for key %s: %s %s|] 
                             (show k) (show x) (show y)
 
-merge_all :: (M.IsKey map k, Eq a, Show k, Show a,M.IsMap map)
-          => [map k a] -> map k a
+merge_all :: (Ord k, Eq a, Show k, Show a)
+          => [M.Map k a] -> M.Map k a
 merge_all ms = foldl' (M.unionWithKey f) M.empty ms
     where
         f k x y
@@ -675,7 +646,7 @@ merge_all ms = foldl' (M.unionWithKey f) M.empty ms
                             (show k) (show x) (show y)
 
 substitute :: (TypeSystem t, IsQuantifier q, IsName n)
-           => Table n (AbsExpr n t q) 
+           => M.Map n (AbsExpr n t q) 
            -> (AbsExpr n t q) -> (AbsExpr n t q)
 substitute m e = f e
     where
@@ -685,7 +656,7 @@ substitute m e = f e
         subst vs = m M.\\ symbol_table vs
 
 substitute' :: (TypeSystem t, TypeSystem a, IsQuantifier q, IsName n, TypeAnnotationPair t a)
-           => Table n (GenExpr n t a q)
+           => M.Map n (GenExpr n t a q)
            -> (GenExpr n t a q) -> (GenExpr n t a q)
 substitute' m e = f e
     where
@@ -702,7 +673,7 @@ used_var (Word v) = S.singleton v
 used_var (Binder _ vs r expr _) = (used_var expr `S.union` used_var r) `S.difference` S.fromList vs
 used_var expr = visit (\x y -> S.union x (used_var y)) S.empty expr
 
-used_var' :: HasGenExpr expr => expr -> Table (NameT (ExprT expr)) (VarT (ExprT expr))
+used_var' :: HasGenExpr expr => expr -> M.Map (NameT (ExprT expr)) (VarT (ExprT expr))
 used_var' = symbol_table . S.toList . used_var . asExpr
 
 used_fun :: (TypeSystem t, IsQuantifier q, IsName n) 
@@ -715,7 +686,7 @@ used_fun e = visit f s e
                 _          -> S.empty
 
 free_vars' :: HasExpr expr
-           => Table Name Var -> expr -> Table Name Var
+           => M.Map Name Var -> expr -> M.Map Name Var
 free_vars' ds e = vs `M.intersection` ds
     where
         vs = used_var' (getExpr e)
@@ -752,7 +723,7 @@ rename x y e@(Binder q vs r xp t)
         | otherwise             = Binder q vs (rename x y r) (rename x y xp) t
 rename x y e = rewrite (rename x y) e 
 
-primeOnly :: Table Name var -> Expr -> Expr
+primeOnly :: M.Map Name var -> Expr -> Expr
 primeOnly vs = freeVarsOf %~ pr
     where
         pr v | (v^.name) `M.member` vs = prime v

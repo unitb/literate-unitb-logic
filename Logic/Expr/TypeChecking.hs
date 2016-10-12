@@ -18,10 +18,10 @@ import Control.Lens.Misc
 import Control.Monad
 -- import Control.Precondition
 
-import Data.Either
-import Data.Either.Combinators (mapLeft)
-import Data.List
-import qualified Data.Map.Class as M
+import           Data.Either
+import           Data.Either.Combinators (mapLeft)
+import           Data.List
+import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Text.Pretty
@@ -145,7 +145,7 @@ checkTypes' c (Lift e _) = do
 checkTypes' c' (Binder q vs' r t _) = do
     let c  = newContext vs' c'
         ns = map (view name) vs' :: [Name]
-        vs = M.ascElems $ newDummies vs' c'
+        vs = M.elems $ newDummies vs' c'
     (r'',t'') <- parCheck 
         (zcast bool $ checkTypes' c r) 
         (zcast (termType q) $ checkTypes' c t)

@@ -69,7 +69,13 @@ instance NFData SetWD
 instance Functor1 AbsFun where
 instance Foldable1 AbsFun where
 instance Traversable1 AbsFun where
-    traverse1 = funName
+    traverseOn1 f g (Fun xs n l ts t w) = 
+        Fun <$> traverse g xs
+            <*> f n
+            <*> pure l
+            <*> traverse g ts
+            <*> g t
+            <*> pure w
 
 instance (PrettyPrintable n,PrettyPrintable t,Tree t) => PrettyPrintable (AbsFun n t) where
     pretty (Fun xs n _ ts t _) = pretty n ++ pretty xs ++ ": " 

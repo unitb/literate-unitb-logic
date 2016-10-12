@@ -13,12 +13,12 @@ import Control.DeepSeq
 import Control.Monad
 import Control.Lens hiding (Context,rewrite)
 
-import Data.List as L
-import Data.Maybe as M 
-import qualified Data.Map.Class as M 
-import Data.Serialize hiding (label)
-import Data.Set as S 
-import Data.Typeable
+import           Data.List as L
+import           Data.Maybe as M 
+import qualified Data.Map as M 
+import           Data.Serialize hiding (label)
+import           Data.Set as S 
+import           Data.Typeable
 
 import GHC.Generics (Generic)
 
@@ -27,7 +27,6 @@ import Test.QuickCheck.ZoomEq
 import Text.Printf.TH
 
 import Utilities.Syntactic
-import Utilities.Table
 
 data Ignore = Ignore LineInfo
     deriving (Eq,Typeable)
@@ -40,13 +39,13 @@ type Proof = ProofBase Expr
 data ProofBase expr =  FreeGoal Name Name Type (ProofBase expr) LineInfo
             | ByCases   [(Label, expr, (ProofBase expr))] LineInfo
             | Easy (Maybe Double) LineInfo
-            | Assume (Table Label expr) expr (ProofBase expr) LineInfo
+            | Assume (M.Map Label expr) expr (ProofBase expr) LineInfo
             | ByParts [(expr,(ProofBase expr))]           LineInfo
                 -- Too complex
-            | Assertion (Table Label (expr,(ProofBase expr))) [(Label,Label)] (ProofBase expr) LineInfo
-            | Definition (Table Var expr) (ProofBase expr) LineInfo
-            | InstantiateHyp expr (Table Var expr) (ProofBase expr) LineInfo
-            | Keep Context [expr] (Table Label expr) (ProofBase expr) LineInfo
+            | Assertion (M.Map Label (expr,(ProofBase expr))) [(Label,Label)] (ProofBase expr) LineInfo
+            | Definition (M.Map Var expr) (ProofBase expr) LineInfo
+            | InstantiateHyp expr (M.Map Var expr) (ProofBase expr) LineInfo
+            | Keep Context [expr] (M.Map Label expr) (ProofBase expr) LineInfo
             | ByCalc (CalculationBase expr)
     deriving (Eq,Typeable, Generic, Show,Functor,Foldable,Traversable)
 
@@ -189,10 +188,10 @@ instance (Eq expr,IsExpr expr) => ProofRule (ProofBase expr) where
                   & nameless  %~ (defs' ++)
     proof_po (Assertion lemma dep p _) lbl po = do
             let depend = M.map M.fromList $ M.fromListWith (++) $ L.map f dep
-                depend :: Table Label (Table Label ())
+                depend :: M.Map Label (M.Map Label ())
                 f (x,y) = (x,[(y,())])
             pos1 <- proof_po p ( composite_label [lbl,label "main goal"] )
-                $ po & nameless %~ (++ L.map fst (M.ascElems lemma))
+                $ po & nameless %~ (++ L.map fst (M.elems lemma))
             pos2 <- forM (M.toList lemma) (\(lbl2,(g,p)) -> do
                 let used = fromMaybe M.empty $ lbl2 `M.lookup` depend
                     thm  = (M.map fst lemma) `M.intersection` used
@@ -203,7 +202,7 @@ instance (Eq expr,IsExpr expr) => ProofRule (ProofBase expr) where
 
     proof_po    (InstantiateHyp hyp ps proof li) 
                 lbl po = do -- (Sequent ctx asm hyps goal) = do
-        if hyp `elem` M.ascElems (po^.named) 
+        if hyp `elem` M.elems (po^.named) 
                 || hyp `elem` (po^.nameless) then do
             newh <- case hyp of
                 Binder Forall vs r t _
@@ -296,7 +295,7 @@ are_fresh vs po =
                 S.unions $ 
                 L.map used_var es)
     where
-        es = (po^.goal) : (po^.nameless) ++ (M.ascElems $ po^.named)
+        es = (po^.goal) : (po^.nameless) ++ (M.elems $ po^.named)
 
 rename_all :: [(Var,Var)] -> Expr -> Expr
 rename_all [] e = e

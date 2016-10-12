@@ -13,12 +13,10 @@ import Control.Lens hiding (Context)
 import Control.Monad.RWS hiding ((<>))
 import Control.Precondition
 
-import Data.Map.Class as M
+import Data.Map as M
 import Data.Set as S
 
-import Utilities.Table
-
-newtype SequentM a = SequentM (RWS () ([Sort],[Var],[Expr],[Context]) (ParserSetting,[Theory],Table Name Var) a)
+newtype SequentM a = SequentM (RWS () ([Sort],[Var],[Expr],[Context]) (ParserSetting,[Theory],Map Name Var) a)
     deriving (Functor,Applicative,Monad)
 
 runSequent :: SequentM Expr -> Sequent

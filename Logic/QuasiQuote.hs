@@ -20,7 +20,7 @@ import Control.Lens hiding (uncons)
 import Control.Monad.State  hiding (lift)
 
 import Data.List
-import Data.Map.Class as M
+import Data.Map as M
 import Data.Maybe
 import Data.String.Utils as S
 

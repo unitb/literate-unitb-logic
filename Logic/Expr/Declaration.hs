@@ -16,9 +16,9 @@ import Control.Lens hiding (rewrite,Context,elements
 import Control.Monad.Reader
 import Control.Precondition
 
-import Data.Graph.Array
-import qualified Data.Map.Class as M
-import Data.Typeable
+import           Data.Graph.Array
+import qualified Data.Map as M
+import           Data.Typeable
 
 import GHC.Generics.Instances
 
@@ -143,10 +143,10 @@ instance IsName n => Symbol (AbsDef n t q) t q where
 instance (IsName n,Ord t,IsQuantifier q,TypeSystem t) 
         => Symbol (GenContext n t q) t q where
     decl (Context sorts cons fun defs _) = -- dums) = 
-                concatMap decl (M.ascElems sorts)
+                concatMap decl (M.elems sorts)
 --            ++  concatMap decl (elems (cons `merge` dums)) 
-            ++  concatMap decl (M.ascElems cons) 
-            ++  concatMap decl (M.ascElems fun) 
+            ++  concatMap decl (M.elems cons) 
+            ++  concatMap decl (M.elems fun) 
             ++  concatMap decl (sortDefs defs)
 
 sortDefs :: ( IsName n,Ord t,Ord q
@@ -154,8 +154,8 @@ sortDefs :: ( IsName n,Ord t,Ord q
             , TypeSystem t )
          => M.Map n (AbsDef n t q) 
          -> [AbsDef n t q]
-sortDefs defs = M.ascElems defA
-                    ++ (acyclic <$> top_sort (M.ascElems defB) es)
+sortDefs defs = M.elems defA
+                    ++ (acyclic <$> top_sort (M.elems defB) es)
                             
         where
             edges d v = d `M.intersection` used_var' (v^.defExpr)

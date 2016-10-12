@@ -19,7 +19,7 @@ import Data.Char
 import Data.Default
 import Data.List as L
 import Data.List.Ordered as L
-import Data.Map.Class    as M hiding ( map, Unordered )
+import Data.Map    as M hiding ( map )
 import Data.Maybe  as MM hiding (fromJust)
 import Data.PartialOrd
 import qualified Data.Set  as S
@@ -36,8 +36,6 @@ import Test.QuickCheck.ZoomEq
 
 import Text.Printf.TH
 
-import Utilities.Table
-
 type Sequent = AbsSequent GenericType HOQuantifier
 
 type Sequent' = GenSequent InternalName GenericType FOQuantifier Expr'
@@ -49,7 +47,7 @@ type FOSequent = GenSequent InternalName FOType FOQuantifier FOExpr
 type AbsSequent t q = GenSequent Name t q (AbsExpr Name t q)
 
 data SyntacticProp = SyntacticProp  
-        { _associative  :: Table Name ExprP
+        { _associative  :: M.Map Name ExprP
         , _monotonicity :: Map (Relation,Function) (ArgDep Rel) }
             -- (rel,fun) --> rel
     deriving (Eq,Show,Generic)
@@ -76,7 +74,7 @@ data GenSequent name t q expr = Sequent
         , _genSequentContext  :: GenContext name t q
         , _genSequentSyntacticThm :: SyntacticProp
         , _genSequentNameless :: [expr] 
-        , _genSequentNamed :: Table Label expr
+        , _genSequentNamed :: M.Map Label expr
         , _genSequentGoal  :: expr }
     deriving (Eq, Generic, Show, Functor, Foldable, Traversable)
 
@@ -127,10 +125,10 @@ instance HasExprs (GenSequent n t q e) e where
                 <*> traverse f hyp1 
                 <*> f g
 
-instance HasSorts (GenSequent n t q e) (Table Name Sort) where
+instance HasSorts (GenSequent n t q e) (M.Map Name Sort) where
     sorts = context.sorts
 
-instance HasConstants (GenSequent n t q e) (Table n (AbsVar n t)) where
+instance HasConstants (GenSequent n t q e) (M.Map n (AbsVar n t)) where
     constants = context.constants
 
 predefined :: [InternalName]
@@ -169,7 +167,7 @@ makeSequent :: Pre
             => Context
             -> SyntacticProp
             -> [Expr]
-            -> Table Label Expr
+            -> M.Map Label Expr
             -> Expr
             -> Sequent
 makeSequent ctx props asms0 asms1 g = checkSequent $ 
@@ -202,7 +200,7 @@ checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
         xs  = snd $ execRWS (travAsserts >> travDefs) ctx ()
 
 expressions :: Getter (GenSequent n t q expr) [expr]
-expressions = to $ \s -> (s^.goal) : (s^.nameless) ++ (M.ascElems $ s^.named)
+expressions = to $ \s -> (s^.goal) : (s^.nameless) ++ (M.elems $ s^.named)
 
 leftMono :: ArgDep a -> Maybe a
 leftMono (Side l _) = l
@@ -256,9 +254,9 @@ instance (TypeSystem t, IsQuantifier q) => PrettyPrintable (AbsSequent t q) wher
             indentAfter n = partsOf traverseLines %~ zipWith (++) ("" : repeat (replicate n ' '))
             asms   = map (indent 1) $ 
                     ["sort: " ++ intercalate ", " (L.filter (not.L.null) $ MM.mapMaybe f $ toList ss)]
-                    ++ (map pretty $ ascElems fs)
+                    ++ (map pretty $ elems fs)
                     ++ (map pretty $ sortDefs ds)
-                    ++ (map pretty $ ascElems vs)
+                    ++ (map pretty $ elems vs)
                     ++ map showWithLabel hs
                     ++ map pretty_print' hs'
             goal' = indent 1 $ pretty_print' g
@@ -281,7 +279,7 @@ remove_type_vars :: Sequent' -> FOSequent
 remove_type_vars (Sequent tout res ctx m asm hyp goal) = Sequent tout res ctx' m asm' hyp' goal'
     where
         (Context ss _ _ dd _) = ctx
-        _ = dd :: Table InternalName Def'
+        _ = dd :: M.Map InternalName Def'
         asm_types = MM.catMaybes 
                     $ map type_strip_generics 
                     $ S.elems $ S.unions 
@@ -301,7 +299,7 @@ remove_type_vars (Sequent tout res ctx m asm hyp goal) = Sequent tout res ctx' m
                     (S.toList decl_types ++ const_types)^.partsOf (traverse.foldSorts.filtered (is _RecordSort))
         asm' :: [FOExpr]
         asm' = map snd $ concatMap (gen_to_fol seq_types (label "")) asm
-        hyp' :: Table Label FOExpr
+        hyp' :: M.Map Label FOExpr
         hyp' = M.fromList $ concat $ M.elems $ M.mapWithKey (gen_to_fol seq_types) hyp
         goal' :: FOExpr
         goal' = vars_to_sorts ss goal
@@ -475,7 +473,7 @@ entailment s0 s1 = (po0,po1)
         po0 = empty_sequent & context .~ ctx
                             & goal    .~ xp0 `zimplies` xp1 
         po1 = s1 & context .~ ctx
-                 & goal    .~ zall (s0^.nameless ++ ascElems (s0^.named))
+                 & goal    .~ zall (s0^.nameless ++ elems (s0^.named))
 
 instance (NFData n,NFData t,NFData q,NFData expr) 
     => NFData (GenSequent n t q expr)

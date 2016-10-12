@@ -19,13 +19,12 @@ import Control.Precondition
 import           Data.Foldable as F
 import           Data.List as L
 import           Utilities.MapSyntax
-import qualified Data.Map.Class as M
+import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Text.Printf.TH
 
 import Utilities.Syntactic
-import Utilities.Table
 
 infixr 1 .==.
 infix 2 .=>
@@ -429,12 +428,12 @@ one_point_rule' (Binder q vs r t _)
                                         $ M.mapKeys (view name) inst) ts
                    | (inst,ts,fv) <- insts ]
         
-        insts :: [ ( Table (AbsVar n t) (AbsExpr n t q)
+        insts :: [ ( M.Map (AbsVar n t) (AbsExpr n t q)
                    , [AbsExpr n t q]
                    , S.Set (AbsVar n t)) ]
         insts = [ (M.unions $ map subst ts,ts,S.unions $ map used_var ts) | ts <- ts' ]
         
-        subst :: AbsExpr n t q -> Table (AbsVar n t) (AbsExpr n t q)
+        subst :: AbsExpr n t q -> M.Map (AbsVar n t) (AbsExpr n t q)
         subst (FunApp f xs)
                 | (z3_name f) == [smt|=|] = M.fromList $ rs
             where
