@@ -26,10 +26,10 @@ packages:
 - '.'
 - location:
     git: https://github.com/literate-unitb/literate-unitb-utils.git
-    commit: cdb6ae0c50687e02b96507b47b62f62bcc9c371b
+    commit: fa8bd0de5c59a27210f82073d4ed47c71eb2cd8e
 - location:
     git: https://github.com/literate-unitb/literate-unitb-latex.git
-    commit: 047e276093d8310574261048eaf42d780938db69
+    commit: 45e3be4a3026f7e72dd8a088dd5483cb13a53409
 - location:
     git: https://github.com/literate-unitb/existential.git
     commit: e1bb9c7e183b3d6a17587e93eb8d8fe21ff9845a
