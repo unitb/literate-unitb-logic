@@ -70,7 +70,7 @@ import Text.Printf
 import qualified Data.Map as M
 
 total_caps :: SSem
-total_caps = unsafePerformIO $ new $ z3c_capacity z3_config
+total_caps = unsafePerformIO $ new $ z3_config^.capacity
 
 instance Tree Z3Command where
     as_tree' = return . as_tree

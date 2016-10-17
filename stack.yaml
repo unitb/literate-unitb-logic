@@ -25,6 +25,9 @@ ghc-options:
 packages:
 - '.'
 - location:
+    git: https://github.com/literate-unitb/literate-unitb-config.git
+    commit: 6da867389a3bfbba8adeca194fbae7da7e9745ef
+- location:
     git: https://github.com/literate-unitb/literate-unitb-utils.git
     commit: fa8bd0de5c59a27210f82073d4ed47c71eb2cd8e
 - location:

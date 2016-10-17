@@ -36,6 +36,8 @@ import Test.QuickCheck.ZoomEq
 
 import Text.Printf.TH
 
+import Z3.Version
+
 type Sequent = AbsSequent GenericType HOQuantifier
 
 type Sequent' = GenSequent InternalName GenericType FOQuantifier Expr'
@@ -171,7 +173,9 @@ makeSequent :: Pre
             -> Expr
             -> Sequent
 makeSequent ctx props asms0 asms1 g = checkSequent $ 
-    Sequent 3000 1 ctx props asms0 asms1 g
+        Sequent timeout 1 ctx props asms0 asms1 g
+    where
+        timeout = fromIntegral default_timeout
 
 checkSequent :: Pre
              => Sequent -> Sequent
