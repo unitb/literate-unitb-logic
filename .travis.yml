@@ -23,6 +23,7 @@ cache:
   - $HOME/z3
   - $HOME/literate-unitb/literate-unitb-logic/.stack-work/install
   - $HOME/literate-unitb/literate-unitb-logic/.stack-work/downloaded
+  timeout: 1000
 
 # The different configurations we want to test. We have BUILD=cabal which uses
 # cabal-install, and BUILD=stack which uses Stack. More documentation on each
@@ -151,6 +152,13 @@ before_install:
   fi
 - export PATH="$HOME/z3:$PATH"
 - z3 -h
+# Deploy anti-timeout weapon
+- mkdir $HOME/scripts || echo ""
+- export PATH="$HOME/scripts:$PATH"
+- pwd
+- ls
+- chmod +x travis_long.sh
+- cp travis_long.sh $HOME/scripts/travis_long
 # Download and unpack the stack executable
 - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
 - mkdir -p ~/.local/bin
@@ -179,7 +187,7 @@ install:
   set -ex
   case "$BUILD" in
     stack)
-      stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+      travis_long stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
       ;;
     cabal)
       cabal --version
@@ -199,10 +207,10 @@ script:
   case "$BUILD" in
     stack)
       # stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
-      travis_wait 50 stack --no-terminal $ARGS test --bench --no-run-benchmarks 
+      travis_long stack --no-terminal $ARGS test --bench --no-run-benchmarks 
       ;;
     cabal)
-      travis_wait 50 cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      travis_long cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
       ORIGDIR=$(pwd)
       for dir in $PACKAGES
