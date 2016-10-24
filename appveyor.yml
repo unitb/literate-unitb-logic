@@ -26,11 +26,11 @@ install:
 - cp z3-4.4.1-%platform%-win\\bin\\z3.exe c:\\z3\\
 - cp z3-4.4.1-%platform%-win\\bin\\z3.exe c:\\stack\\
 - set PATH="c:\\z3:$PATH"
-- z3 -h
+- z3 -h || echo ""
   # 
   # Stack
   # 
-- cmd: curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-i386
+- curl -ostack.zip -L --insecure http://www.stackage.org/stack/windows-i386
 - 7z x stack.zip stack.exe
 
 clone_folder: "c:\\stack"
