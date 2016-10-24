@@ -25,7 +25,7 @@ install:
 - unzip z3.zip
 - cp z3-4.4.1-%platform%-win\\bin\\z3.exe c:\\z3\\
 - cp z3-4.4.1-%platform%-win\\bin\\z3.exe c:\\stack\\
-- set PATH="c:\\z3:$PATH"
+- set PATH="c:\\z3:%PATH%"
 - z3 -h || echo ""
   # 
   # Stack
