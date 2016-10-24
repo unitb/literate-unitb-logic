@@ -52,8 +52,8 @@ build:
 
 build_script:
 - stack setup %lts% > nul
-- cmd: echo "" | stack --no-terminal install dlist cereal mtl lens text %lts%
-# - cmd: echo "" | stack --no-terminal build %lts% --test --no-run-tests
+# - cmd: echo "" | stack --no-terminal install dlist cereal mtl lens text %lts%
+- cmd: echo "" | stack --no-terminal build %lts% --test --no-run-tests
 
 skip_commits:
   files:
@@ -62,5 +62,5 @@ skip_commits:
 test_script:
 # The ugly echo "" hack is to avoid complaints about 0 being an invalid file
 # descriptor
-- cmd: echo "" 
-# - cmd: echo "" | stack --no-terminal test %lts%
+# - cmd: echo "" 
+- cmd: echo "" | stack --no-terminal test %lts%
