@@ -52,8 +52,8 @@ build:
 
 build_script:
 - stack setup %lts% > nul
-- cmd: echo "" | stack --no-terminal install lens %lts%
-# - cmd: echo "" | stack --no-terminal install dlist cereal mtl lens text %lts%
+# - cmd: echo "" | stack --no-terminal install lens %lts%
+- cmd: echo "" | stack --no-terminal install dlist cereal mtl text %lts%
 # - cmd: echo "" | stack --no-terminal build %lts% --test --no-run-tests
 
 skip_commits:
