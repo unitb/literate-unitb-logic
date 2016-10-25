@@ -11,9 +11,9 @@ cache:
 # - "c:\\sr\\setup-exe-cache"
 # - "c:\\sr\\snapshots"
 # - "c:\\sr\\templates"
-- "C:\\stack\\.stack-work\\downloaded"
-- "C:\\stack\\.stack-work\\install"
-- "C:\\stack\\.stack-work\\logs"
+- "C:\\stack\\.stack-work\\downloaded -> appveyor.yml"
+- "C:\\stack\\.stack-work\\install -> appveyor.yml"
+- "C:\\stack\\.stack-work\\logs -> appveyor.yml"
 
 install:
   # 
