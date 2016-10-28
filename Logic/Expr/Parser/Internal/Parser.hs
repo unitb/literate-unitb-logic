@@ -38,7 +38,7 @@ import           Data.Semigroup hiding (option)
 import qualified Data.Set as S
 import           Data.Either.Validation
 
-import Text.Printf.TH
+import Text.Printf.TH as Printf
 
 import Utilities.EditDistance
 import Utilities.Graph as G ((!))
@@ -122,7 +122,7 @@ type_t = choose_la
         t <- case get_type ctx t of
             Just s -> do
                 unless (length ts == typeParams s)
-                    $ fail $ [printf|Parameter mismatch. Expecting %d type parameters, received %d.|] 
+                    $ fail $ [Printf.s|Parameter mismatch. Expecting %d type parameters, received %d.|] 
                         (typeParams s) 
                         (length ts)
                 return $ Gen s ts
@@ -254,9 +254,9 @@ data Term =
     deriving (Show)
 
 instance PrettyPrintable Term where
-    pretty (Cmd c)   = [printf|Command: %s|] (pretty c)
-    pretty (UE ue)   = [printf|UntypedExpr:  %s|] (pretty ue)
-    pretty (Field n) = [printf|Field: %s|] (pretty n)
+    pretty (Cmd c)   = [s|Command: %s|] (pretty c)
+    pretty (UE ue)   = [s|UntypedExpr:  %s|] (pretty ue)
+    pretty (Field n) = [s|Field: %s|] (pretty n)
 
 term :: Parser Term
 term = do
@@ -367,7 +367,7 @@ validateFields xs = raiseErrors $ traverseWithKey f xs'
         xs' = fromListWith (<>) $ xs & mapped._2 %~ pure
         f _ ((x,_):|[]) = Success x
         f k xs = Failure [MLError (msg $ pretty k) $ xs & mapped._1 .~ " - "]
-        msg = [printf|Multiple record entry with label '%s'|]
+        msg = [s|Multiple record entry with label '%s'|]
         raiseErrors :: Validation [Error] a -> Parser a
         raiseErrors = either (liftP . Scanner . const . Left) 
                              return . validationToEither
@@ -439,8 +439,8 @@ expr = do
         r <- read_term []
         case r of
             UE ue -> return ue
-            Cmd op -> fail $ [printf|unapplied functional operator: %s|] (pretty op)
-            Field n -> fail $ [printf|record field out of context: %s|] (pretty n)
+            Cmd op -> fail $ [s|unapplied functional operator: %s|] (pretty op)
+            Field n -> fail $ [s|record field out of context: %s|] (pretty n)
     where
         read_term :: [([UnaryOperator], Term, BinOperator)] 
                   -> Parser Term
@@ -496,7 +496,7 @@ expr = do
                     e2 <- apply_op op0 e0 e1
                     reduce ys vs e2 op1
                 RightAssoc -> read_term (([],e1,op1):xs)
-                NoAssoc ->  fail $ [printf|ambiguous expression: '%s' and '%s' are not associative|] (pretty op0) (pretty op1)
+                NoAssoc ->  fail $ [s|ambiguous expression: '%s' and '%s' are not associative|] (pretty op0) (pretty op1)
         reduce xs (u:us) e0 op0 = do
             r <- binds u op0
             case r of
@@ -536,8 +536,8 @@ apply_unary op e = do
             Cmd oper -> fail $ err_msg (pretty oper) (pretty op)
             Field n  -> fail $ err_msg_2 (pretty n) (pretty op)
     where
-        err_msg   = [printf|functional operator cannot be the operand of any unary operator: %s, %s|]
-        err_msg_2 = [printf|field names cannot be the operand of any unary operator: %s, %s|]
+        err_msg   = [s|functional operator cannot be the operand of any unary operator: %s, %s|]
+        err_msg_2 = [s|field names cannot be the operand of any unary operator: %s, %s|]
         
 apply_op :: BinOperator -> Term -> Term -> Parser Term
 apply_op op x0 x1 = do
@@ -561,8 +561,8 @@ apply_op op x0 x1 = do
                     Cmd cmd -> fail $ err_msg (pretty cmd) (pretty op)
                 | otherwise   -> fail $ err_msg_2 (pretty n) (pretty op)
     where
-        err_msg = [printf|functional operator cannot be the operand of any binary operator: %s, %s|]
-        err_msg_2 = [printf|field name is not a valid operand: %s, %s|]
+        err_msg = [s|functional operator cannot be the operand of any binary operator: %s, %s|]
+        err_msg_2 = [s|field name is not a valid operand: %s, %s|]
 
 parse_expression :: ParserSetting
                  -> StringLi
@@ -608,4 +608,4 @@ parse_expr set xs = do
                 $ ambiguities typed_x
         return $ DispExpr (flatten xs) (flattenConnectors typed_x)
     where
-        msg   = [printf|type of %s is ill-defined: %s|]
+        msg   = [s|type of %s is ill-defined: %s|]

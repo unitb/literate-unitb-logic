@@ -113,8 +113,8 @@ scan_expr n = do
                     let b  = take 5 ys == take 5 cs 
                         zs
                             | b         = ""
-                            | otherwise = [printf| '%s'|] (take 5 ys)
-                    fail $ [printf|invalid token: '%s'%s|] (take 5 cs) zs)
+                            | otherwise = [s| '%s'|] (take 5 ys)
+                    fail $ [s|invalid token: '%s'%s|] (take 5 cs) zs)
                 return
             xs <- scan_expr n
             return $ (x,li) : xs

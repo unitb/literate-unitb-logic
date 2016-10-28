@@ -110,8 +110,8 @@ instance TypeSystem FOType where
     _FromSort   = _FOT . mapping (iso id evalList)
 
 instance PrettyPrintable Sort where
-    pretty (RecordSort m) = [printf|{ %s }|] $ intercalate ", " 
-                $ zipWith (\f -> [printf|'%s :: a%d|] (fieldName f)) (M.keys m) [0..]
+    pretty (RecordSort m) = [s|{ %s }|] $ intercalate ", " 
+                $ zipWith (\f -> [s|'%s :: a%d|] (fieldName f)) (M.keys m) [0..]
     pretty s = render $ s^.name
 
 instance Hashable FOType where
@@ -176,7 +176,7 @@ typeParams (Datatype xs _ _)  = length xs
 
 instance PrettyPrintable FOType where
     pretty (FOT s []) = (render $ z3_name s)
-    pretty (FOT s ts) = [printf|%s %s|] (render $ s^.name) (show $ map Pretty ts)
+    pretty (FOT t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
 
 instance PrettyPrintable Field where
     pretty (Field n) = pretty n
@@ -184,10 +184,10 @@ instance PrettyPrintable Field where
 instance PrettyPrintable GenericType where
     pretty (GENERIC n)         = "_" ++ render n 
     pretty (VARIABLE n)        = "'" ++ render n 
-    pretty (Gen (RecordSort m) xs) = [printf|{ %s }|] $ intercalate ", " 
-                $ zipWith (\f t -> [printf|'%s :: %s|] (fieldName f) (pretty t)) (M.keys m) xs
+    pretty (Gen (RecordSort m) xs) = [s|{ %s }|] $ intercalate ", " 
+                $ zipWith (\f t -> [s|'%s :: %s|] (fieldName f) (pretty t)) (M.keys m) xs
     pretty (Gen s []) = render $ s^.name
-    pretty (Gen s ts) = [printf|%s %s|] (render $ s^.name) (show $ map Pretty ts)
+    pretty (Gen t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
 
 recordName :: M.Map Field a -> Name
 recordName m = makeZ3Name $ "Record-" ++ intercalate "-" (map fieldName $ M.keys m)
@@ -199,7 +199,7 @@ accessorName :: Pre => Field -> InternalName
 accessorName (Field n) = addPrefix "field" $ asInternal n
 
 fieldName :: Field -> String
-fieldName (Field n) = [printf|%s|] (render n)
+fieldName (Field n) = [s|%s|] (render n)
 
 instance HasName Sort Name where
     name = to $ \case 
@@ -349,9 +349,9 @@ z3_decoration' t = do
             ProverOutput -> f <$> as_tree' t
             UserOutput -> return ""
     where
-        f (Expr.List ys) = [printf|@Open%s@Close|] xs
+        f (Expr.List ys) = [s|@Open%s@Close|] xs
             where xs = concatMap f ys :: String
-        f (Str y)   = [printf|@@%s|] y
+        f (Str y)   = [s|@@%s|] y
 
 instance Serialize Sort where
 instance Serialize Type where

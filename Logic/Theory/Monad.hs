@@ -58,12 +58,12 @@ instance SignatureImpl () where
         let ts' = repeat $ VARIABLE $ fromString'' "unexpected"
             (Fun _ n _ ts t _) = fun
             f e t = unlines
-                    [ [printf|    argument: %s|] (pretty e)
-                    , [printf|      type: %s|] (pretty $ type_of e)
-                    , [printf|      expected type: %s|] (pretty t) ] 
+                    [ [s|    argument: %s|] (pretty e)
+                    , [s|      type: %s|] (pretty $ type_of e)
+                    , [s|      expected type: %s|] (pretty t) ] 
             err_msg = unlines $
-                    [ [printf|arguments of '%s' do not match its signature:|] (render n)
-                    , [printf|   signature: %s -> %s|] (pretty ts) (pretty t)
+                    [ [s|arguments of '%s' do not match its signature:|] (render n)
+                    , [s|   signature: %s -> %s|] (pretty ts) (pretty t)
                     ] ++ zipWith f args (ts ++ ts')
         maybe (Left [err_msg]) Right 
             $ check_args args fun
@@ -299,7 +299,7 @@ clash :: (PrettyPrintable a, Ord a)
       => (thy -> Map a b) -> [thy] -> Map a b
 clash f xs 
         | L.null es = M.unions $ L.map f xs
-        | otherwise = error $ [printf|Name clash with: %s|] $ intercalate "," (L.map pretty es)
+        | otherwise = error $ [s|Name clash with: %s|] $ intercalate "," (L.map pretty es)
     where
         es = keys $ M.unions $ do
             (x,ys) <- zip xs $ drop 1 $ tails xs
@@ -356,7 +356,7 @@ axiom = withLoc 'declAxiom
 
 axioms :: String -> Writer [ExprP] () -> M.Map Label Expr
 axioms name cmd
-        | L.null ls = fromList $ L.map (first $ label . [printf|@%s@@_%s|] name) $ zip ns rs
+        | L.null ls = fromList $ L.map (first $ label . [s|@%s@@_%s|] name) $ zip ns rs
         | otherwise = error $ unlines $ concat ls
     where
         n  = length rs

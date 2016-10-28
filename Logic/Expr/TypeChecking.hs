@@ -95,7 +95,7 @@ checkTypes expected_t c ue xs = do
 checkTypes' :: Context -> UntypedExpr -> Either [String] Expr
 checkTypes' c (Word (Var n ())) = do
     v <- bind (n `M.lookup` (c^.constants))
-        ([printf|%s is undeclared|] $ pretty n)
+        ([s|%s is undeclared|] $ pretty n)
     return $ Word v
 checkTypes' _ (Lit n ()) = do
     let t = case n of 
@@ -109,15 +109,15 @@ checkTypes' c (Record (FieldLookup e field) _) = do
     e' <- checkTypes' c e
     let t = type_of e'
     trecs <- bind (t^?fieldTypes)
-        ([printf|While looking up field %s: %s is not a record|] (pretty field) (pretty e))
+        ([s|While looking up field %s: %s is not a record|] (pretty field) (pretty e))
     t' <- bind (field `M.lookup` trecs)
-        ([printf|Record %s of type %s has no field %s|] (pretty e) (pretty t) (pretty field))
+        ([s|Record %s of type %s has no field %s|] (pretty e) (pretty t) (pretty field))
     return (Record (FieldLookup e' field) t')
 checkTypes' c (Record (RecUpdate e table) _) = do
     e' <- checkTypes' c e
     let t = type_of e'
     t' <- bind (t^?fieldTypes)
-        ([printf|Expression %s is not a record|] (pretty e))
+        ([s|Expression %s is not a record|] (pretty e))
     m <- traverseValidation (checkTypes' c) table
     return $ Record (RecUpdate e' m) (record_type $ M.union (type_of <$> m) t')
 checkTypes' c (Record (RecLit table) _) = do
@@ -125,7 +125,7 @@ checkTypes' c (Record (RecLit table) _) = do
     return $ Record (RecLit m) $ record_type $ type_of <$> m
 checkTypes' c (Record (RecSet table) _) = do
     -- let isSet e = maybe (Left undefined') (Right . (,e)) . preview _ElementType . type_of $ e
-        -- msg = [printf|Expression %s has type %s but should have a set type|]
+        -- msg = [s|Expression %s has type %s but should have a set type|]
     -- m <- traverseValidation (isSet <=< zcast (set_type gA) . Right <=< checkTypes' c) table
     m <- traverseValidation (checkTypes' c) table
     -- let m' = snd <$> m
@@ -157,7 +157,7 @@ checkTypes' c' (Binder q vs' r t _) = do
     ts <- forM v_type $ \((Var x t),xs) -> do
         let ys = map var_type $ S.toList xs
         t' <- maybe 
-            (fail $ [printf|Inconsistent type for %s: %s|] 
+            (fail $ [s|Inconsistent type for %s: %s|] 
                     (pretty x)
                     $ intercalate "," $ map pretty ys)
             return

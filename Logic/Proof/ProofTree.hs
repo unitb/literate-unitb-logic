@@ -24,7 +24,7 @@ import GHC.Generics (Generic)
 
 import Test.QuickCheck.ZoomEq
 
-import Text.Printf.TH
+import Text.Printf.TH as Printf
 
 import Utilities.Syntactic
 
@@ -160,7 +160,7 @@ instance (Eq expr,IsExpr expr) => ProofRule (ProofBase expr) where
                     | are_fresh [u] po = return $ zforall (L.filter ((v /=) . view name) ds) 
                                                 (rename v u r)
                                                 (rename v u expr)
-                    | otherwise        = Left $ [Error ([printf|variable '%s' cannot be freed as '%s'|] 
+                    | otherwise        = Left $ [Error ([s|variable '%s' cannot be freed as '%s'|] 
                                                     (render v) (render u)) li]
             free_vars expr = return expr
 
@@ -182,7 +182,7 @@ instance (Eq expr,IsExpr expr) => ProofRule (ProofBase expr) where
                 clashes = decl `M.intersection` M.mapKeys (view name) defs
                 defs' = L.map (uncurry zeq . first Word) $ M.toList defs
             unless (M.null clashes) $
-                Left [Error ([printf|Symbols %s are already defined|] $ intercalate "," $ L.map render $ M.keys clashes) li]
+                Left [Error ([Printf.s|Symbols %s are already defined|] $ intercalate "," $ L.map render $ M.keys clashes) li]
             proof_po p lbl $ 
                 s & constants %~ (M.union $ symbol_table $ M.keys defs)
                   & nameless  %~ (defs' ++)
@@ -234,7 +234,7 @@ chain n x y
     | y == equal = Right x
     | otherwise  = case (x,y) `L.lookup` (n^.chaining) of
                     Just z -> Right z
-                    Nothing -> Left [[printf|chain: operators %s and %s don't chain|] 
+                    Nothing -> Left [[s|chain: operators %s and %s don't chain|] 
                                     (pretty x) (pretty y)]
 
 

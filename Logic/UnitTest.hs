@@ -83,7 +83,7 @@ print_po pos cs name actual expected = do
             mr = M.keys $ M.filter not $ M.unionWith (==) (me `M.intersection` ma) ma
         forM_ (zip [0..] mr) $ \(i,po) -> do
             if label po `M.member` pos then do
-                withFile ([printf|po-%d-%d.z3|] n i) WriteMode $ \h -> do
+                withFile ([s|po-%d-%d.z3|] n i) WriteMode $ \h -> do
                     hPutStrLn h $ "; " ++ name
                     hPutStrLn h $ "; " ++ po
                     hPutStrLn h $ "; " ++ if not $ ma ! po 

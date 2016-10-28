@@ -77,7 +77,7 @@ parseParts f sep kind pars0 pars1 loc p str | sep `isInfixOf` str = f v e
         e  = pars1 loc p rExpr
         --p' = p & expected_type .~ Just t
         li  = asLI loc
-        err = error $ "\n"++ show_err [Error ([printf|misshapen %s: '%s'|] kind str) li]
+        err = error $ "\n"++ show_err [Error ([s|misshapen %s: '%s'|] kind str) li]
 
 parseVarDecl :: Loc -> String -> State ParserSetting ()
 parseVarDecl loc str = do
@@ -117,7 +117,7 @@ parseVar loc p str = fromMaybe err $ do
         M.lookup n' $ p^.decls
     where
         n = strip str
-        err = error $ "\n"++ show_err [Error ([printf|unknown variables: '%s'|] n) li]
+        err = error $ "\n"++ show_err [Error ([s|unknown variables: '%s'|] n) li]
         li = asLI loc
 
 parseExpr :: Loc -> ParserSetting -> String -> DispExpr

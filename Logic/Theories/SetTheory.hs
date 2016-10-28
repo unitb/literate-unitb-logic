@@ -20,7 +20,7 @@ import Data.Default
 import Data.List as L
 import Data.Map as M
 
-import Text.Printf.TH
+import Text.Printf.TH as Printf
 
 import Utilities.MapSyntax
 
@@ -224,7 +224,7 @@ mk_zrecord_set = zrecord_set . runMap'
 zrecord_set :: Map Field ExprP
             -> ExprP
 zrecord_set m = do
-        let msg e = [printf|Expecting a set type for: %s\n  of type: %s|] 
+        let msg e = [s|Expecting a set type for: %s\n  of type: %s|] 
                       (pretty e) (pretty $ type_of e)
             getElements :: ExprP -> Either [String] Type
             getElements e = e >>= \e -> maybe (Left [msg e]) Right $ type_of e^?_ElementType
@@ -301,8 +301,8 @@ dec x t = x ++ z3_decoration t
 item_type :: Type -> Either String Type
 item_type t0@(Gen s [t])
         | s == set_sort         = Right t
-        | otherwise             = Left $ [printf| %s is not a set |] (pretty t0)
-item_type t0                    = Left $ [printf| %s is not a set |] (pretty t0)
+        | otherwise             = Left $ [Printf.s| %s is not a set |] (pretty t0)
+item_type t0                    = Left $ [Printf.s| %s is not a set |] (pretty t0)
 
     -- set theory
 set_union   :: BinOperator

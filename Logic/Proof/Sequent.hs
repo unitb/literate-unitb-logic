@@ -34,7 +34,7 @@ import Test.QuickCheck.Report ()
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.ZoomEq
 
-import Text.Printf.TH
+import Text.Printf.TH as Printf
 
 import Z3.Version
 
@@ -181,7 +181,7 @@ checkSequent :: Pre
              => Sequent -> Sequent
 checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
     where
-        msg = [printf|Sequent scopes: \n%s|] $ L.unlines $ map pretty_print' xs
+        msg = [Printf.s|Sequent scopes: \n%s|] $ L.unlines $ map pretty_print' xs
         checkScopes' e = do
             xs <- snd <$> listen (checkScopesAux e)
             unless (L.null xs)
@@ -277,7 +277,7 @@ instance (TypeSystem t, IsQuantifier q) => PrettyPrintable (AbsSequent t q) wher
             f (x, Datatype args n _) = f (x, Sort n (asInternal n) $ length args)
             f (x, DefSort y z xs _)  = f (x, Sort y z $ length xs)
             f (_, Sort _ z 0) = Just $ render z
-            f (_, Sort _ z n) = Just $ [printf|%s [%s]|] (render z) (intersperse ',' $ map chr $ take n [ord 'a' ..]) 
+            f (_, Sort _ z n) = Just $ [Printf.s|%s [%s]|] (render z) (intersperse ',' $ map chr $ take n [ord 'a' ..]) 
 
 remove_type_vars :: Sequent' -> FOSequent
 remove_type_vars (Sequent tout res ctx m asm hyp goal) = Sequent tout res ctx' m asm' hyp' goal'

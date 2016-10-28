@@ -633,7 +633,7 @@ merge m0 m1 = M.unionWithKey f m0 m1
     where
         f k x y
             | x == y    = x
-            | otherwise = error $ [printf|conflicting declaration for key %s: %s %s|] 
+            | otherwise = error $ [s|conflicting declaration for key %s: %s %s|] 
                             (show k) (show x) (show y)
 
 merge_all :: (Ord k, Eq a, Show k, Show a)
@@ -642,7 +642,7 @@ merge_all ms = foldl' (M.unionWithKey f) M.empty ms
     where
         f k x y
             | x == y    = x
-            | otherwise = error $ [printf|conflicting declaration for key %s: %s %s|]
+            | otherwise = error $ [s|conflicting declaration for key %s: %s %s|]
                             (show k) (show x) (show y)
 
 substitute :: (TypeSystem t, IsQuantifier q, IsName n)
@@ -789,7 +789,7 @@ makePrisms ''RecordExpr
 
 fromEither :: Loc -> Either [String] a -> a
 fromEither _ (Right x)  = x
-fromEither loc (Left msg) = error $ unlines $ map ([printf|\n%s\n%s|] loc') msg
+fromEither loc (Left msg) = error $ unlines $ map ([s|\n%s\n%s|] loc') msg
     where
         loc' :: String
         loc' = locMsg loc

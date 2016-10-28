@@ -128,7 +128,7 @@ renderAsLatex (Name b base' p suff') = concat [slash,toList base,replicate (from
         slash  | b          = "\\"
                | otherwise  = ""
         suffix | L.null suff = ""
-               | otherwise   = [printf|_{%s}|] suff
+               | otherwise   = [s|_{%s}|] suff
 
 instance IsBaseName Name where
     render = renderAsLatex
@@ -180,7 +180,7 @@ instance IsBaseName InternalName where
     render (InternalName pre x suf) = prefix ++ z3Render x ++ suf
         where
             prefix | null pre  = ""
-                   | otherwise = [printf|@@%s@@_|] pre
+                   | otherwise = [s|@@%s@@_|] pre
     asInternal' = id
     asName' (InternalName _ n _) = n
     fromString'' = fromString'
@@ -222,7 +222,7 @@ isZ3Name = parseLanguage z3Name'
 parseLanguage :: Language a -> String -> Either [String] a
 parseLanguage lang str = mapLeft (\x -> [err,show x]) $ parse' lang "" str
     where
-        err = [printf|invalid name: '%s'|] str
+        err = [s|invalid name: '%s'|] str
 
 isName :: String -> Either [String] Name
 isName = parseLanguage latexName

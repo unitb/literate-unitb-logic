@@ -179,4 +179,4 @@ eval_generatorT cmd =
             liftM (fromListWithKey combine . D.toList . snd) 
                 $ evalRWST (runPOGen cmd) empty_param ()
     where
-        combine k _ _ = assertFalse' $ [printf|%s\n|] $ show k
+        combine k _ _ = assertFalse' $ [s|%s\n|] $ show k

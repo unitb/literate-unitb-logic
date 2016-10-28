@@ -533,7 +533,7 @@ zrec_update' :: (TypeSystem t,IsName n,IsQuantifier q)
 zrec_update' e m = do
     let f e = case type_of e^?fieldTypes of
                 Just t -> Right (e,t)
-                _ -> Left [[printf|expecting a record type, met %s in %s|] 
+                _ -> Left [[s|expecting a record type, met %s in %s|] 
                             (pretty $ type_of e)
                             (pretty e)
                             ]
@@ -546,12 +546,12 @@ zfield :: (IsName n,TypeSystem t,IsQuantifier q)
 zfield e field = do
     -- let field = Field field'
     e' <- e
-    let msg1 = [printf|Field lookup requires a record type:\n  in expression %s\n  of type: %s|] 
+    let msg1 = [s|Field lookup requires a record type:\n  in expression %s\n  of type: %s|] 
                     (pretty e')
                     (pretty $ type_of e')
     fs <- maybe (Left [msg1]) Right 
         $ type_of e'^?fieldTypes
-    let msg2 = [printf|Type of expression does not have field '%s':\n  in expression %s\n  with fields: %s|]
+    let msg2 = [s|Type of expression does not have field '%s':\n  in expression %s\n  with fields: %s|]
                     (pretty field)
                     (pretty e')
                     (pretty $ M.keys fs)
