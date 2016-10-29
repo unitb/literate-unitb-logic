@@ -104,6 +104,7 @@ library
         Z3.Z3
         -- TEST CASES
         Logic.Test
+        Logic.Test.Stable
         Z3.Test
   
   -- Modules included in this library but not exported.
