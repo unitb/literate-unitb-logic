@@ -67,7 +67,7 @@ import System.Exit
 import System.IO.Unsafe
 import System.Process
 
-import Text.Printf
+import Text.Printf.TH
 
 import qualified Data.Map as M
 
@@ -259,7 +259,7 @@ discharge_on :: Label -> Sequent -> IO (MVar (Either String Validity))
 discharge_on lbl po = do
     res <- newEmptyMVar
     forkIO $ do
-        r <- try (discharge' (Just default_timeout) lbl po)
+        r <- try (discharge lbl po)
         let f e = show (e :: SomeException)
             r'  = mapLeft f r
         putMVar res r'
@@ -286,7 +286,7 @@ instance Exception Z3Exception
 
 map_failures :: (Int -> Label) -> IO a -> IO a
 map_failures po_name cmd = catch cmd $ \(Z3Exception i msg) -> do
-        fail $ printf "during verification of %s:\n%s" (pretty $ po_name i) msg 
+        fail $ [s|during verification of %s:\n%s|] (pretty $ po_name i) msg 
 
 --subexpr :: TypeSystem t => AbsExpr t -> [AbsExpr t]
 --subexpr e = reverse $ f [] e
@@ -317,8 +317,6 @@ map_failures po_name cmd = catch cmd $ \(Z3Exception i msg) -> do
 --        f xs = label $ concatMap z3_decoration $ M.elems xs
 --
 
-discharge :: Label -> Sequent -> IO Validity
-discharge lbl po = discharge' Nothing lbl po
 
 tryDischarge :: Int        -- Timeout in seconds
              -> (Word32 -> Word32)
@@ -340,20 +338,19 @@ dischargeBoth :: HasExpr expr
               -> SequentWithWD' expr
               -> IO (Maybe Validity)
 dischargeBoth lbl pos = do
-    wdValidity <- discharge' Nothing lbl (_wd pos)
+    wdValidity <- discharge lbl (_wd pos)
     if wdValidity /= Valid then
         return Nothing
     else
-        Just <$> discharge' Nothing lbl (getExpr <$> _goal pos)
+        Just <$> discharge lbl (getExpr <$> _goal pos)
 
-discharge' :: Maybe Int      -- Timeout in seconds
-           -> Label
+discharge :: Label
            -> Sequent        -- 
            -> IO Validity
-discharge' n lbl po
+discharge lbl po
     | (po^.goal) == ztrue = return Valid
     | otherwise = withSemN total_caps (fromIntegral $ po^.resource) $ do
-        let t = fromMaybe default_timeout n
+        let t = z3_config^.z3Timeout
             code  = z3_commands' True po
         case code of
             Just code -> do
@@ -403,7 +400,7 @@ verify' lbl code n = do
             let header = Comment $ pretty lbl
             n <- modifyMVar log_count $ 
                 return . ((1+) &&& id)
-            writeFile (printf "log%d-1.z3" n) (renderZ3Code . prefix [header] $ code)
+            writeFile ([s|log%d-1.z3|] n) (renderZ3Code . prefix [header] $ code)
             return $ Right SatUnknown
         else if res == ["sat"] then do
             return $ Right Sat
