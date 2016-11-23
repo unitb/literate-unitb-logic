@@ -335,9 +335,9 @@ case9 = $(quickCheckClassesWith [''PreOrd,''PartialOrd])
 
 instance IsQuantifier Integer where
     merge_range = Str . show
-    termType n = unGen arbitrary (mkQCGen $ fromInteger n) (fromInteger n)
+    termType n = unGen arbitrary (mkQCGen $ fromInteger n) (fromInteger n)
     exprType n r t = unGen (oneof [arbitrary,return r,return t]) 
-                (mkQCGen $ fromInteger n) (fromInteger n)
+                (mkQCGen $ fromInteger n) (fromInteger n)
     qForall  = 1
     qExists  = 2
 instance Tree Integer where

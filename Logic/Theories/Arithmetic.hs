@@ -114,7 +114,7 @@ arithmetic = (empty_theory' "arithmetic") {
                          zcard (r `zunion` r')
                     .=.  zcard r .+ zcard r'            
                 $axiom $
-                    zcard r .=. typ_fun2 (sum_fun gA) r (zconst $ mzint 1)
+                    zcard r .=. typ_fun2 (sum_fun gA) r (zconst $ mzint 1)
 
             -- fromList $ L.map (first $ label . dec')
             -- [ ("0",axm1) 
@@ -143,7 +143,7 @@ sum_fun :: Type -> Fun
 sum_fun t = mk_fun [t] [smt|qsum|] [set_type t, array t int] int
 
 qsum :: HOQuantifier
-qsum = UDQuant (sum_fun gA) int (QTConst int) FiniteWD
+qsum = UDQuant (sum_fun gA) int (QTConst int) FiniteWD
 
 arith :: Notation
 arith = create $ do

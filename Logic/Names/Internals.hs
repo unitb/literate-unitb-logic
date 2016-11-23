@@ -246,7 +246,7 @@ addPrefix :: String -> InternalName -> InternalName
 addPrefix n1 (InternalName pre n0 suf) = InternalName (n1 ++ pre) n0 suf
 
 dropSuffix :: InternalName -> InternalName
-dropSuffix (InternalName pre ns _) = InternalName pre ns ""
+dropSuffix (InternalName pre ns _) = InternalName pre ns ""
 
 
 reserved :: String -> Int -> InternalName

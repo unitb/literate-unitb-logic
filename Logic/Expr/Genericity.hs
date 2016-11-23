@@ -235,7 +235,7 @@ typ_fun3 f@(Fun _ n _ ts t _) mx my mz  = do
                    , [s|   second argument: %s|]                        (pretty y)
                    , [s|     type %s|]                                  (pretty $ type_of y) 
                    , [s|   third argument: %s|]                         (pretty z)
-                   , [s|     type %s|]                                  (pretty $ type_of z)
+                   , [s|     type %s|]                                  (pretty $ type_of z)
                    ]
         maybe (Left [err_msg]) Right $ check_args [x,y,z] f
 

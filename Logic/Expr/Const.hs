@@ -91,7 +91,7 @@ zor x y      = zsome [x, y]
 zeq_fun :: (IsName n,TypeSystem t) => t -> AbsFun n t
 zeq_fun t    = mk_fun [] [smt|=|] [t, t] bool
 
-zeq_symb :: (IsQuantifier q,IsName n) => TwoExpr n Type q
+zeq_symb :: (IsQuantifier q,IsName n) => TwoExpr n Type q
 zeq_symb     = no_errors2 mzeq_symb
 mzeq_symb :: IsName n => TwoExprP n Type q
 mzeq_symb    = typ_fun2 $ mk_fun [gA] [smt|eq|] [gA, gA] bool
@@ -128,7 +128,7 @@ zall xs'      =
         xs = concatMap f $ F.toList xs'
         f (FunApp fun@(Fun [] n _ _ _ _) xs)
             | render n == "and" 
-                && not (isLifted fun) = concatMap f xs
+                && not (isLifted fun) = concatMap f xs
         f x
             | x == ztrue = []
             | otherwise   = [x]

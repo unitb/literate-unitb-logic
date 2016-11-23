@@ -17,7 +17,7 @@ module Logic.Names
     , fresh
     , reserved
     , z3Render
-    , dropSuffix 
+    , dropSuffix 
     , addSuffix
     , addPrefix
     , addBackslash

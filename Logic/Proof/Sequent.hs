@@ -118,9 +118,9 @@ instance Default SyntacticProp where
     def = empty_monotonicity
 
 instance (Ord n,ZoomEq n,ZoomEq t,ZoomEq q,ZoomEq e) 
-        => ZoomEq (GenSequent n t q e) where
+        => ZoomEq (GenSequent n t q e) where
 
-instance HasExprs (GenSequent n t q e) e where
+instance HasExprs (GenSequent n t q e) e where
     traverseExprs f (Sequent tout res ctx prop hyp0 hyp1 g) = 
         Sequent tout res ctx prop 
                 <$> traverse f hyp0 
@@ -179,7 +179,7 @@ makeSequent ctx props asms0 asms1 g = checkSequent $
 
 checkSequent :: Pre
              => Sequent -> Sequent
-checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
+checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
     where
         msg = [Printf.s|Sequent scopes: \n%s|] $ L.unlines $ map pretty_print' xs
         checkScopes' e = do
@@ -480,7 +480,7 @@ entailment s0 s1 = (po0,po1)
                  & goal    .~ zall (s0^.nameless ++ elems (s0^.named))
 
 instance (NFData n,NFData t,NFData q,NFData expr) 
-    => NFData (GenSequent n t q expr)
+    => NFData (GenSequent n t q expr)
 instance NFData SyntacticProp
 instance NFData Rel
 instance NFData t => NFData (ArgDep t)

@@ -385,7 +385,7 @@ recordType = do
             ]
         record_type <$> validateFields xs
 
-recordFields :: Parser (Field,(a,LineInfo)) -> Parser (Map Field a)
+recordFields :: Parser (Field,(a,LineInfo)) -> Parser (Map Field a)
 recordFields field = do
         attempt open_square
         xs <- choose_la 

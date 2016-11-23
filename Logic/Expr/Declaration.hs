@@ -160,7 +160,7 @@ sortDefs defs = M.elems defA
         where
             edges d v = d `M.intersection` used_var' (v^.defExpr)
             (defA,defB) = M.partition (M.null . edges defs) defs
-            es = [ (v,v') | v  <- M.elems defB
+            es = [ (v,v') | v  <- M.elems defB
                           , v' <- M.elems $ edges defB v ]
 
 mk_context :: TypeSystem t => [AbsDecl t q] -> GenContext InternalName t q

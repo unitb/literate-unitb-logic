@@ -112,7 +112,7 @@ instance (Arbitrary t,Arbitrary n,Arbitrary a,Arbitrary q,TypeSystem t,IsQuantif
 mkRecord :: (TypeSystem t,TypeSystem a,IsName n,IsQuantifier q,TypeAnnotationPair t a) 
          => RecordExpr (GenExpr n t a q) -> Maybe (GenExpr n t a q)
 mkRecord (RecLit m) = Just $ Record (RecLit m) (record_type $ type_of <$> m)
-mkRecord r@(RecUpdate e m) = Record r . record_type . (M.map type_of m `M.union`) <$> (type_of e^?fieldTypes) 
+mkRecord r@(RecUpdate e m) = Record r . record_type . (M.map type_of m `M.union`) <$> (type_of e^?fieldTypes) 
 mkRecord r@(RecSet m) = Just $ Record r $ record_type $ set_type . type_of <$> m
 mkRecord r@(FieldLookup e fields) = do
       t <- type_of e^?fieldTypes
@@ -251,7 +251,7 @@ type ExprPC e = Either [String] e
 class ( TypeSystem (TypeT expr)
       , TypeSystem (AnnotT expr)
       , IsName (NameT expr)
-      , TypeAnnotationPair (TypeT expr) (AnnotT expr)
+      , TypeAnnotationPair (TypeT expr) (AnnotT expr)
       , IsQuantifier (QuantT expr)
       , Typeable expr
       , VarT expr ~ AbsVar (NameT expr) (TypeT expr)
@@ -733,7 +733,7 @@ defExpr :: Lens' (AbsDef n t q) (AbsExpr n t q)
 defExpr f (Def ps n args rt e) = makeDef ps n args rt <$> f e
 
 funOf :: (TypeSystem t, IsQuantifier q, IsName n) 
-      => AbsDef n t q -> AbsFun n t
+      => AbsDef n t q -> AbsFun n t
 funOf (Def ps n args rt _e) = Fun ps n Unlifted (map type_of args) rt InfiniteWD
 
 class (IsGenExpr e
