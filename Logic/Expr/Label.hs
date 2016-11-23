@@ -11,6 +11,7 @@ import qualified Control.Invariant as I
 import Data.Hashable
 import Data.List as L
 import Data.Serialize hiding (label)
+import Data.Semigroup
 import Data.String
 import Data.String.Utils ( split )
 import Data.Typeable
@@ -34,6 +35,12 @@ instance PrettyPrintable Label where
 instance IsString Label where
     fromString x = label x
 
+instance Monoid Label where
+    mempty  = Lbl ""
+    mconcat = composite_label
+    mappend = (</>)
+instance Semigroup Label where
+
 instance IsLabel Label where
     as_label = id
 
@@ -54,7 +61,9 @@ label :: String -> Label
 label s = Lbl s
 
 (</>) :: Label -> Label -> Label
-(</>) (Lbl x) (Lbl y) = Lbl $ x ++ "/" ++ y
+(</>) (Lbl x) (Lbl y) 
+        | null x || null y  = Lbl $ x ++ y
+        | otherwise         = Lbl $ x ++ "/" ++ y
 
 composite_label :: [Label] -> Label
 composite_label xs = Lbl $ intercalate "/" $ L.filter (not . L.null) $ map str xs
