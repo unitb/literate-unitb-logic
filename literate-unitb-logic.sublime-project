@@ -108,6 +108,14 @@
                 "*hs",
                 "*.md"
             ],
+            "path": "Logic"
+        },
+        {
+            "file_include_patterns":
+            [
+                "*hs",
+                "*.md"
+            ],
             "path": "app"
         },
         // {

@@ -13,15 +13,16 @@ import Control.Lens.HierarchyTH
 import Control.Precondition
 
 #if MIN_VERSION_transformers(0,5,0)
-import           Prelude.Extras hiding (Lift1)
--- #else
--- import           Data.Functor.Classes
+import qualified Data.Functor.Classes as F
 #endif
 import           Data.Map
 import           Data.Serialize
 import           Data.Typeable
 
 import GHC.Generics hiding ((:+:),prec)
+#if MIN_VERSION_transformers(0,5,0)
+import GHC.Generics.Instances
+#endif
 
 import Test.QuickCheck.ZoomEq
 
@@ -40,7 +41,7 @@ data Theory' expr = Theory
         , _thm_depend :: [ (Label,Label) ]
         , _notation   :: Notation }
     deriving ( Eq, Show, Typeable, Generic, Functor
-             , Foldable, Traversable)
+             , Foldable, Traversable, Generic1)
 
 makeLenses ''Theory'
 makeFields ''Theory'
@@ -82,3 +83,10 @@ instance ZoomEq expr => ZoomEq (Theory' expr) where
 instance NFData expr => NFData (Theory' expr) where
 
 instance Serialize expr => Serialize (Theory' expr) where
+
+#if MIN_VERSION_transformers(0,5,0)
+instance F.Show1 Theory' where
+    liftShowsPrec = genericLiftShowsPrec
+instance F.Eq1 Theory' where
+    liftEq = genericLiftEq
+#endif
