@@ -23,6 +23,8 @@ cache:
   - $HOME/z3
   - $HOME/literate-unitb/literate-unitb-logic/.stack-work/install
   - $HOME/literate-unitb/literate-unitb-logic/.stack-work/downloaded
+  - $HOME/unitb/literate-unitb-logic/.stack-work/install
+  - $HOME/unitb/literate-unitb-logic/.stack-work/downloaded
   timeout: 1000
 
 # The different configurations we want to test. We have BUILD=cabal which uses
@@ -127,6 +129,7 @@ matrix:
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
+- cp -rp $HOME/literate-unitb $HOME/unitb
 - unset CC
 
 # We want to always allow newer versions of packages when building on GHC HEAD

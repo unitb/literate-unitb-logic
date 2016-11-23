@@ -29,7 +29,7 @@ author:              Simon Hudon
 
 -- An email address to which users can send suggestions, bug reports, and 
 -- patches.
-maintainer:          simon@cse.yorku.ca
+maintainer:          simon.hudon@gmail.com
 
 -- A copyright notice.
 -- copyright:           
@@ -47,7 +47,7 @@ cabal-version:       >=1.10
 
 source-repository head
   type:     git
-  location: https://github.com/literate-unitb/literate-unitb-logic
+  location: https://github.com/unitb/literate-unitb-logic
 
 library
   -- Modules exported by the library.
