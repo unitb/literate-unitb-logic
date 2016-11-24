@@ -56,7 +56,7 @@ packages:
     commit: a82197c81f2f8cdb4ecce54495ca62a6c10ad3d1
 - location:
     git: https://github.com/unitb/generic-instances.git
-    commit: 8d67a6479d3b5a38c69efd114c1d59d2b81c813c
+    commit: 5e9b4de0f6549933f570f7f2bab16654299c7b0d
 - location:
     git: https://github.com/unitb/lens-extra.git
     commit: 2a54572aa21db03adb8c161e5755892803a1808b
