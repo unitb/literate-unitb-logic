@@ -98,7 +98,7 @@ instance TypeAnnotationPair FOType FOType where
     strippedType = id
 
 instance TypeSystem GenericType where
-    make_type s  = Gen s . evalList
+    make_type ss  = Gen ss . evalList
     _FromSort    = _Gen . mapping (iso id evalList)
 
 instance Typed FOType where
@@ -106,13 +106,13 @@ instance Typed FOType where
     type_of = id
 
 instance TypeSystem FOType where
-    make_type s = FOT s . evalList
+    make_type ss = FOT ss . evalList
     _FromSort   = _FOT . mapping (iso id evalList)
 
 instance PrettyPrintable Sort where
     pretty (RecordSort m) = [s|{ %s }|] $ intercalate ", " 
                 $ zipWith (\f -> [s|'%s :: a%d|] (fieldName f)) (M.keys m) [0..]
-    pretty s = render $ s^.name
+    pretty ss = render $ ss^.name
 
 instance Hashable FOType where
 instance Hashable GenericType where
@@ -128,12 +128,12 @@ instance TypeSystem () where
     _FromSort = prism' (const ()) (const Nothing)
 
 instance Tree GenericType where
-    as_tree' (Gen s ts) = cons_to_tree s ts
+    as_tree' (Gen ss ts) = cons_to_tree ss ts
     as_tree' (GENERIC x)   = return $ Str $ render x
     as_tree' (VARIABLE n)  = return $ Str $ "_" ++ render n
     {-# INLINABLE rewriteM #-}
-    rewriteM f (Gen s ts) = do
-            Gen s <$> traverse f ts
+    rewriteM f (Gen ss ts) = do
+            Gen ss <$> traverse f ts
     rewriteM _ x@(VARIABLE _) = pure x
     rewriteM _ x@(GENERIC _)  = pure x
 
@@ -141,28 +141,28 @@ instance Plated FOType where
     plate = rewriteM
 
 instance Tree FOType where
-    as_tree' (FOT s ts) = cons_to_tree s ts
+    as_tree' (FOT ss ts) = cons_to_tree ss ts
     {-# INLINABLE rewriteM #-}
-    rewriteM f (FOT s ts) = FOT s <$> traverse f ts
+    rewriteM f (FOT ss ts) = FOT ss <$> traverse f ts
 
 instance Lift GenericType where
     lift = genericLift
 
 as_generic :: FOType -> GenericType
-as_generic (FOT s ts) = Gen s (map as_generic ts)
+as_generic (FOT ss ts) = Gen ss (map as_generic ts)
 
 cons_to_tree :: Tree a => Sort -> [a] -> Reader (OutputMode n) StrList
-cons_to_tree s [] = do
+cons_to_tree ss [] = do
     opt <- ask
     let n = case opt of
-                ProverOutput -> render $ z3_name s
-                UserOutput -> render $ s^.name
+                ProverOutput -> render $ z3_name ss
+                UserOutput -> render $ ss^.name
     return $ Str n
-cons_to_tree s ts = do
+cons_to_tree ss ts = do
     opt <- ask
     let n = case opt of
-                ProverOutput -> render $ z3_name s
-                UserOutput -> render $ s^.name
+                ProverOutput -> render $ z3_name ss
+                UserOutput -> render $ ss^.name
     return $ Expr.List (Str n : map as_tree ts)
 
 typeParams :: Sort -> Int
@@ -175,7 +175,7 @@ typeParams (DefSort _ _ ps _) = length ps
 typeParams (Datatype xs _ _)  = length xs
 
 instance PrettyPrintable FOType where
-    pretty (FOT s []) = (render $ z3_name s)
+    pretty (FOT ss []) = (render $ z3_name ss)
     pretty (FOT t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
 
 instance PrettyPrintable Field where
@@ -186,7 +186,7 @@ instance PrettyPrintable GenericType where
     pretty (VARIABLE n)        = "'" ++ render n 
     pretty (Gen (RecordSort m) xs) = [s|{ %s }|] $ intercalate ", " 
                 $ zipWith (\f t -> [s|'%s :: %s|] (fieldName f) (pretty t)) (M.keys m) xs
-    pretty (Gen s []) = render $ s^.name
+    pretty (Gen ss []) = render $ ss^.name
     pretty (Gen t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
 
 recordName :: M.Map Field a -> Name
@@ -213,11 +213,11 @@ instance HasName Sort Name where
 
 instance Named Sort where
     type NameOf Sort = Name
-    decorated_name' s = do
+    decorated_name' ss = do
         opt <- ask
         case opt of
-            ProverOutput -> return $ z3_name s
-            UserOutput -> return $ s^.name
+            ProverOutput -> return $ z3_name ss
+            UserOutput -> return $ ss^.name
 
         -- TODO: make BoolSort, IntSort, RealSort into 
         -- the Sort datatype with a 'builtin' flag
@@ -298,7 +298,7 @@ elementType :: (TypeSystem t,Pre) => t -> t
 elementType t = fromJust' $ t^?_ElementType
 
 foldSorts :: TypeSystem t => Fold t Sort
-foldSorts = _FromSort.(\f (s,ts) -> liftA2 (,) (f s) ((traverse.foldSorts) f ts))
+foldSorts = _FromSort.(\f (ss,ts) -> liftA2 (,) (f ss) ((traverse.foldSorts) f ts))
 
 int :: TypeSystem t => t
 int  = make_type IntSort []
@@ -379,8 +379,8 @@ instance Arbitrary GenericType where
                     return $ array t0 t1
                 , oneof gen_prm
                 , do
-                    s  <- oneof sorts
-                    ts <- case s of
+                    ss  <- oneof sorts
+                    ts <- case ss of
                         RecordSort m -> 
                             replicateM (M.size m) arbitrary
                         Sort _ _ n -> 
@@ -394,7 +394,7 @@ instance Arbitrary GenericType where
                         BoolSort -> 
                             return []
                         Datatype _ _ _ -> error "Type.arbitrary: impossible"
-                    return $ Gen s ts
+                    return $ Gen ss ts
                 , do
                     t <- arbitrary
                     return $ set_type t

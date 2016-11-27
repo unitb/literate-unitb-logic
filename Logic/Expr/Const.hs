@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables,ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Logic.Expr.Const where
 
     -- Modules   

@@ -770,7 +770,6 @@ instance HasExpr (AbsExpr Name Type HOQuantifier) where
 
 instance NFData CastType where
 instance (NFData t,NFData q,NFData n) => NFData (AbsDef n t q)
-instance (NFData t,NFData n) => NFData (AbsVar n t)
 instance NFData Value
 instance (NFData t,NFData q,NFData n,NFData a) => NFData (GenExpr n t a q)
 instance (NFData expr) => NFData (RecordExpr expr)

@@ -86,7 +86,7 @@ areVisible :: (PrettyPrintable e,Foldable f,Pre)
            -> f Var -> e -> ScopeCorrectness
 areVisible ln vars' e = do
     vs <- foldMap view ln 
-    let pre  = [s|\n%s\n free vars = %s\n declared  = %s\n diff      = %s|]
+    let pref  = [s|\n%s\n free vars = %s\n declared  = %s\n diff      = %s|]
                 (stackTrace' [$__FILE__] ?loc "Scope error")
                 (show $ Pretty <$> M.keys vars)
                 (show $ Pretty <$> M.keys vs)
@@ -94,9 +94,9 @@ areVisible ln vars' e = do
         vars = symbol_table vars'
     if vars `isSubmapOf` vs
         then return []
-        else withPrefix pre $ do 
-            pre <- views prefix $ intercalate " - " . reverse
-            return [(pre,pretty e)]
+        else withPrefix pref $ do 
+            pref <- views prefix $ intercalate " - " . reverse
+            return [(pref,pretty e)]
 
 scopeCorrect :: (HasScope a,Pre) => a -> [(String,String)]
 scopeCorrect x = scopeCorrect' x def

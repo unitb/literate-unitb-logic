@@ -411,3 +411,5 @@ instance Arbitrary Flipping where
     arbitrary = genericArbitrary
 
 instance Serialize Flipping where
+
+instance ZoomEq Flipping where

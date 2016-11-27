@@ -90,7 +90,7 @@ scan_expr n = do
                 , read_list ":" >> return Colon
                 , read_list "," >> return Comma
                 , do
-                    read_list "'"
+                    _ <- read_list "'"
                     Literal . NameLit . fromString'' <$> identString
                 , match_char (`elem` ['.',';']) >>= \x -> return $ Operator [x]
                 , do
@@ -133,9 +133,9 @@ eat_space = do
         then return ()
         else choice 
                 [ match_char isSpace >> return ()
-                , do read_list "\\begin{array}{" 
-                     many (match_char (/= '}')) 
-                     read_list "}"
+                , do _ <- read_list "\\begin{array}{" 
+                     _ <- many (match_char (/= '}')) 
+                     _ <- read_list "}"
                      return ()
                 , read_list "\\end{array}" >> return ()
                 , read_list "\\left" >> return ()

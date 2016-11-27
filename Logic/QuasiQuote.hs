@@ -145,9 +145,6 @@ ctx :: State ParserSetting a
     -> (ParserSetting -> b) -> b
 ctx = ctxWith []
 
-instance (Lift n,Lift t) => Lift (AbsVar n t) where
-    lift = genericLift
-
 instance Lift CastType where
     lift = genericLift
 

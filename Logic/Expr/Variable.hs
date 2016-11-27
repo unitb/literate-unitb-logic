@@ -8,6 +8,7 @@ import Logic.Expr.Type
 import Logic.Names
 
     -- Library
+import Control.DeepSeq
 import Control.Lens hiding (rewrite,Context
                            ,Const,Context'
                            ,Traversable1(..))
@@ -19,6 +20,8 @@ import Data.Map as M
 import Data.Serialize
 
 import GHC.Generics.Instances
+
+import Language.Haskell.TH.Syntax hiding (Name,Type)
 
 import Test.QuickCheck
 import Test.QuickCheck.ZoomEq
@@ -90,3 +93,8 @@ instance (IsName n,Typeable t) => Named (AbsVar n t) where
     decorated_name' (Var x _) = adaptName x
 
 instance (Serialize n,Serialize t) => Serialize (AbsVar n t) where
+
+instance (NFData t,NFData n) => NFData (AbsVar n t)
+
+instance (Lift n,Lift t) => Lift (AbsVar n t) where
+    lift = genericLift

@@ -495,7 +495,6 @@ instance Arbitrary SyntacticProp where
     arbitrary = scale (`div` 4) genericArbitrary
     shrink = genericShrink
 
-instance ZoomEq Flipping where
 instance ZoomEq Rel where
 instance Arbitrary Rel where
     arbitrary = genericArbitrary

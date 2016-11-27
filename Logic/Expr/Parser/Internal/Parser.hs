@@ -75,9 +75,9 @@ read_listP xs = liftP $ read_list xs
 
 brackets :: Bracket -> Parser a -> Parser a
 brackets b cmd = do
-        read_listP [Open b]
+        _ <- read_listP [Open b]
         x <- cmd
-        read_listP [Close b]
+        _ <- read_listP [Close b]
         return x
 
 operator :: Parser Name
@@ -113,9 +113,9 @@ type_t = choose_la
         b1 <- look_aheadP $ read_listP [Open Square]
         ts <- if b1
             then do
-                read_listP [Open Square]
+                _  <- read_listP [Open Square]
                 ts <- sep1P type_t comma
-                read_listP [Close Square]
+                _  <- read_listP [Close Square]
                 return ts
             else return []
         ctx <- get_context
@@ -130,11 +130,11 @@ type_t = choose_la
         b2 <- look_aheadP $ read_listP [ Ident "\\pfun" ]               
         if b2 
         then do
-            maybe 
+            _  <- maybe 
                 (fail $ "Invalid sort: '\\pfun'")
                 return
                 $ get_type ctx $ fromString'' "\\pfun"
-            read_listP [Ident "\\pfun"]
+            _  <- read_listP [Ident "\\pfun"]
             t2 <- type_t
             return $ fun_type t t2
         else return t ]
@@ -194,7 +194,7 @@ unary = do
             return
     where
         f op@(UnaryOperator _ tok _) = do
-            read_listP [Operator $ render tok]
+            _ <- read_listP [Operator $ render tok]
             return op
 
 oper :: Parser BinOperator
@@ -209,7 +209,7 @@ oper = do
             return
     where
         f op@(BinOperator _ tok _ _) = do
-            read_listP [Operator $ render tok]
+            _ <- read_listP [Operator $ render tok]
             return op
 
 data FunOperator = Domain | Range
@@ -270,7 +270,7 @@ term = do
                     tryP (read_listP [Open Curly])
                         (\_ -> do
                             ue <- expr
-                            read_listP [Close Curly]
+                            _  <-read_listP [Close Curly]
                             ue <- return $ fun1 f ue
                             return $ UE ue)
                         (return $ Cmd c)
@@ -286,11 +286,11 @@ term = do
                 let vs :: [UntypedVar]
                     vs = Var <$> ns <*> pure ()
                 with_vars (zip ns vs) $ do
-                    read_listP [Open Curly]
+                    _ <- read_listP [Open Curly]
                     r <- tryP (read_listP [Close Curly]) 
                         (\_ -> return ztrue)
                         (do r <- expr
-                            read_listP [Close Curly]
+                            _ <- read_listP [Close Curly]
                             return r)
                     t <- brackets Curly expr
                     let _vars = used_var r `S.union` used_var t
@@ -335,7 +335,7 @@ term = do
 
 recordSetOrLit :: Parser UntypedExpr
 recordSetOrLit = do
-        attempt open_square
+        _ <- attempt open_square
         choose_la
             [ attempt close_square >> return (Record (RecLit M.empty) (record_type M.empty))
             , do li  <- liftP get_line_info
@@ -357,7 +357,7 @@ recordSetOrLit = do
             [ attempt close_square >> return []
             , do getToken _Comma ","
                  xs <- sep1P field comma
-                 close_square
+                 _  <- close_square
                  return xs
             ]
 
@@ -376,22 +376,22 @@ recordType :: Parser Type
 recordType = do
         let field = binding' type_t colonTok
             field :: Parser (Field, (Type, LineInfo))
-        attempt open_curly
+        _  <- attempt open_curly
         xs <- choose_la 
             [ attempt close_curly >> return []
             , do xs <- sep1P field comma
-                 close_curly
+                 _  <- close_curly
                  return xs
             ]
         record_type <$> validateFields xs
 
 recordFields :: Parser (Field,(a,LineInfo)) -> Parser (Map Field a)
 recordFields field = do
-        attempt open_square
+        _  <- attempt open_square
         xs <- choose_la 
             [ attempt close_square >> return []
             , do xs <- sep1P field comma
-                 close_square
+                 _  <- close_square
                  return xs
             ]
         validateFields xs
@@ -447,15 +447,15 @@ expr = do
         read_term xs = do
             us <- liftHOF many unary
             choose_la 
-                [ do    attempt open_brack
+                [ do    _  <- attempt open_brack
                         ue <- expr
-                        close_brack
+                        _  <- close_brack
                         rUpd <- manyP (recordFields $ binding assignTok)
                         add_context "parsing (" $
                             read_op xs us =<< applyRecUpdate rUpd (UE ue)
-                , do    attempt open_curly
+                , do    _  <- attempt open_curly
                         rs <- sep1P expr comma
-                        close_curly
+                        _  <- close_curly
                         ue <- return $ zset_enum' rs
                         add_context "parsing \\{" $
                             read_op xs us $ UE ue
