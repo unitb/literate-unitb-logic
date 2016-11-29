@@ -11,7 +11,8 @@ module Logic.Expr.Parser
     , primed_vars, free_dummies, expected_type
     , default_setting, makeSetting, setting_from_context, S.with_vars
     , mkSetting, theory_setting, theory_setting'
-    , scan_expr )
+    , scan_expr
+    , parse_type )
 where
 
 import Logic.Expr.Parser.Internal.Parser as P

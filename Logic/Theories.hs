@@ -1,12 +1,21 @@
-module Logic.Theories where
+module Logic.Theories 
+    ( module Logic.Theories 
+    , module Logic.Theories.Arithmetic
+    , module Logic.Theories.FunctionTheory
+    , module Logic.Theories.IntervalTheory
+    , module Logic.Theories.PredCalc
+    , module Logic.Theories.RelationTheory
+    , module Logic.Theories.SetTheory
+    , module Logic.Theory )
+where
 
 import Logic.Expr.Classes
 import Logic.Names
 
 import Logic.Theories.Arithmetic
-import Logic.Theories.FunctionTheory
-import Logic.Theories.IntervalTheory
-import Logic.Theories.PredCalc
+import Logic.Theories.FunctionTheory hiding (zrep_select)
+import Logic.Theories.IntervalTheory hiding (vars)
+import Logic.Theories.PredCalc       hiding (zrep_select)
 import Logic.Theories.RelationTheory
 import Logic.Theories.SetTheory
 import Logic.Theory

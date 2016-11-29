@@ -185,6 +185,18 @@ get_variables'' ctx m li = do
             toks li
         return $ map (\(x,y) -> (x,Var x y)) xs
 
+parse_type :: Context
+           -> StringLi
+           -> LineInfo
+           -> Either [Error] Type
+parse_type ctx m li = do
+        toks <- read_tokens 
+            (scan_expr Nothing) (getString m) li
+        read_tokens 
+            (runParser ctx
+                undefined' M.empty type_t) 
+            toks li
+
 unary :: Parser UnaryOperator
 unary = do
         n <- get_notation

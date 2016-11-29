@@ -186,11 +186,12 @@ checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
             xs <- snd <$> listen (checkScopesAux e)
             unless (L.null xs)
                 $ tell [e]
-        ctx = s^.context 
-                & definitions %~ symbol_table 
-                & constants %~ symbol_table
-                & functions %~ symbol_table
-                & dummies   %~ symbol_table
+        ctx = s^.context &~ do
+                definitions %= symbol_table 
+                s <- uses sorts $ M.unions . L.map dataConstrs . M.elems
+                constants %= symbol_table
+                functions %= symbol_table . M.union s
+                dummies   %= symbol_table
         travAsserts = traverseOf_ traverseExprs checkScopes' s
         checkDef (Def _ _ ts _ e) = local (constants %~ M.union (symbol_table ts)) $ checkScopes' e
         travDefs' [] = return ()

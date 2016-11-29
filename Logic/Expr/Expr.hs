@@ -617,6 +617,21 @@ instance TypeSystem t => Typed (AbsDef n t q) where
     type TypeOf (AbsDef n t q) = t
     type_of (Def _ _ _ t _) = t
 
+dataConstrs :: Sort -> M.Map Name Fun
+dataConstrs (Sort _ _ _) = M.empty
+dataConstrs (DefSort _ _ _ _) = M.empty
+dataConstrs BoolSort   = M.empty
+dataConstrs IntSort    = M.empty
+dataConstrs RealSort   = M.empty
+dataConstrs (RecordSort _) = M.empty
+dataConstrs s@(Datatype ps _ cs) = M.fromList $ L.map mkFun cs
+    where
+      tps = L.map (GENERIC . asInternal) ps
+      mkFun (n,args) = (n, 
+          mk_fun 
+            tps 
+            n (L.map snd args) 
+            (make_type s tps))
 
 defAsVar :: AbsDef n t q -> Maybe (AbsVar n t)
 defAsVar (Def [] n [] t _) = Just $ Var n t
