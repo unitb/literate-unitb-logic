@@ -13,7 +13,6 @@ where
 import Logic.Expr.Classes
 
     -- Libraries
-import Control.Invariant
 #if MIN_VERSION_lens(4,13,0)
 import Control.Lens hiding (List,cons,uncons)
 #else
@@ -32,21 +31,10 @@ import Prelude hiding (unlines)
 
 import Text.Pretty
 
-import Utilities.Syntactic hiding (line)
-
 pretty_print' :: Tree t => t -> String
 pretty_print' t = D.toList $ D.intercalate "\n" 
     $ map toString $ as_list $ fst 
     $ runReader (pretty_print_aux $ as_tree t) ""
-
-instance PrettyPrintable a => PrettyPrintable (Checked a) where
-    pretty = pretty . view content'
-
-instance PrettyPrintable StrList where
-    pretty = show
-
-instance PrettyPrintable Error where
-    pretty = report
 
 data Line = Line String' String'
 -- newtype Line = Line String'

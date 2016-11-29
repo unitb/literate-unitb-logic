@@ -40,7 +40,8 @@ import qualified Data.Set as S
 import GHC.Generics hiding (to,from)
 import GHC.Generics.Instances
 
-import Language.Haskell.TH hiding (Type,Name) -- (ExpQ,location,Loc)
+import Language.Haskell.TH hiding (Type,Name)
+import Language.Haskell.TH.Syntax hiding (Type,Name)
 
 import Test.QuickCheck
 import Test.QuickCheck.ZoomEq
@@ -61,7 +62,7 @@ type Expr' = AbsExpr InternalName Type FOQuantifier
 
 type UntypedExpr = GenExpr Name () GenericType HOQuantifier
 
-data CastType = Parse | CodeGen
+data CastType = Parse | CodeGen | WDGuarded
     deriving (Eq,Ord,Typeable,Data,Generic,Show,Enum,Bounded)
 
 data GenExpr n t a q = 
@@ -189,8 +190,8 @@ instance Traversable2 (GenExpr a) where
 instance Traversable3 GenExpr where
     traverseOn3 f g _ _ (Word v) = Word <$> traverseOn1 f g v
     traverseOn3 _ g _ _ (Lit v t) = Lit v <$> g t
-    traverseOn3 f g h p (Cast b e t) = Cast b <$> traverseOn3 f g h p e <*> h t
-    traverseOn3 f g h p (Lift e t) = Lift <$> traverseOn3 f g h p e <*> h t
+    traverseOn3 f g h p (Cast b e t)   = Cast b <$> traverseOn3 f g h p e <*> h t
+    traverseOn3 f g h p (Lift e t)     = Lift <$> traverseOn3 f g h p e <*> h t
     traverseOn3 f g h p (FunApp fun e) = funApp <$> traverseOn1 f h fun <*> traverse (traverseOn3 f g h p) e
     traverseOn3 f g h p (Binder a b c d e) = binder
                                               <$> p a
@@ -227,8 +228,8 @@ expSize (Record (RecUpdate e m) _) = 1 + expSize e + sum (M.map expSize m)
 expSize (Record (FieldLookup e _) _) = 1 + expSize e
 expSize (FunApp _ xs) = 1 + sum (fmap expSize xs)
 expSize (Binder _ _ r t _) = 1 + expSize r + expSize t
-expSize (Cast _ e _) = 1 + expSize e
-expSize (Lift e _) = 1 + expSize e
+expSize (Cast _ e _)  = 1 + expSize e
+expSize (Lift e _)    = 1 + expSize e
 
 instance Arbitrary Value where
     arbitrary = genericArbitrary
@@ -493,6 +494,8 @@ instance (TypeSystem a, TypeSystem t
         e' <- as_tree' e
         return $ Expr.List [Str "as", e', t']
     as_tree' (Cast Parse e _)   = as_tree' e
+    as_tree' (Cast WDGuarded e _)   = do
+        Expr.List <$> sequence [return $ Str "fromJust",as_tree' e]
     as_tree' (Lift e t) = do
         t' <- as_tree' t
         e' <- as_tree' e
@@ -579,7 +582,7 @@ rewriteExprM' fT fA fQ fE e =
                        <*> fT t
             Cast b e t -> Cast b <$> fE e <*> fA t
             Lift e t -> Lift <$> fE e <*> fA t
-            Record e t -> Record <$> traverseRecExpr fE e <*> fT t
+            Record e t  -> Record <$> traverseRecExpr fE e <*> fT t
     where
         ffun (Fun ts n lf targs rt wd) = 
                 Fun <$> traverse fA ts 
@@ -775,6 +778,15 @@ getExpr = asExpr
 
 class (HasGenExpr e,Show e,PrettyPrintable e,Eq e,IsExpr (ExprT e),HasScope e) => HasExpr e where
 class (HasGenExpr e,IsRawExpr (ExprT e),HasScope e) => HasRawExpr e where
+
+instance Lift CastType where
+    lift = genericLift
+instance (Lift t,Lift a,Lift q,Lift n) => Lift (GenExpr n t a q) where
+    lift = genericLift
+instance Lift Value where
+    lift = genericLift
+instance (Lift expr) => Lift (RecordExpr expr) where
+    lift = genericLift
 
 instance IsRawExpr (AbsExpr InternalName Type HOQuantifier) where
 instance IsExpr (AbsExpr Name Type HOQuantifier) where

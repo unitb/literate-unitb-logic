@@ -201,6 +201,9 @@ accessorName (Field n) = addPrefix "field" $ asInternal n
 fieldName :: Field -> String
 fieldName (Field n) = [s|%s|] (render n)
 
+_Params :: TypeSystem t => Sort -> Prism' t [t]
+_Params s = _FromSort.swapped.aside (only s).iso fst (,())
+
 instance HasName Sort Name where
     name = to $ \case 
         RecordSort m   -> recordName m
@@ -260,6 +263,12 @@ maybe_sort   = Datatype [[smt|a|]] ([smt|Maybe|])
 
 maybe_type :: TypeSystem t => t -> t
 maybe_type t = make_type maybe_sort [t]
+
+guarded_sort :: Sort
+guarded_sort = DefSort [smt|guarded|] [smt|guarded|] [[smt|a|]] (maybe_type gA)
+
+guarded_type :: TypeSystem t => t -> t
+guarded_type = make_type guarded_sort . pure
 
 fun_sort :: Sort
 fun_sort = make DefSort "\\pfun"

@@ -484,12 +484,18 @@ const_fun = mk_fun [gA,gB] [smt|const|] [gB] (array gA gB)
 zconst :: ExprP -> ExprP
 zconst = typ_fun1 const_fun
 
+isDef_fun :: IsName n => AbsFun n Type
+isDef_fun = mk_fun [gA] [smt|is-def|] [guarded_type gA] bool
+
 ident_fun :: IsName n => AbsFun n Type
 ident_fun = mk_fun [gA] [smt|ident|] [] (array gA gA)
 
 elem_fun :: (IsName n,TypeSystem t)
          => t -> AbsFun n t
 elem_fun t = mk_fun' [t] "elem" [t,set_type t] bool
+
+zIsDef :: ExprP -> ExprP
+zIsDef = typ_fun1 isDef_fun
 
 zelem         :: (IsQuantifier q,IsName n) 
               => ExprPG n Type q -> ExprPG n Type q -> ExprPG n Type q

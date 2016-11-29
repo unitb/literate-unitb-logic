@@ -9,8 +9,7 @@ import Logic.Proof.Monad
 import Logic.QuasiQuote hiding (var)
 import Logic.Test.Stable
 import Logic.Theories
-import Logic.Theory
-import Logic.Theories.SetTheory
+import Logic.WellDefinedness
 
 import Z3.Z3
 
@@ -223,6 +222,8 @@ test = test_cases "genericity"
         , aCase "Proofs with record lookup" case22 result22
         , aCase "Testing the parser (\\qforall{x,y}{}{x = y})" case23 result23
         , aCase "Testing the parser (\\neg (-2) = 2)" case24 result24
+        , aCase "Testing the type checker (to add WD guards)" case25 result25
+        , aCase "WD of guarded values" case26 result26
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -603,3 +604,34 @@ case24 = return $ either show_error id $ untypedExpression
 
 result24 :: UntypedExpr
 result24 = znot (fun2 (zeq_fun gA) (zopp $ zint 2) (zint 2))
+
+case25 :: IO Expr
+case25 = return $ getExpr $ c [expr| x = y |]
+    where
+        c = ctx $ do
+                decls %= M.union (symbol_table 
+                        [ Var x int
+                        , Var y $ guarded_type int ])
+                expected_type .= Nothing
+        x = [smt|x|]
+        y = [smt|y|]
+
+result25 :: Expr
+result25 = x `zeq` Cast WDGuarded y int
+    where
+        x = Word $ Var [smt|x|] int
+        y = Word $ Var [smt|y|] (guarded_type int)
+
+case26 :: IO Expr
+case26 = return $ well_definedness $ getExpr $ c [expr| x = y |]
+    where
+        c = ctx $ do
+                decls %= M.union (symbol_table 
+                        [ Var x int
+                        , Var y $ guarded_type int ])
+                expected_type .= Nothing
+        x = [smt|x|]
+        y = [smt|y|]
+
+result26 :: Expr
+result26 = $typeCheck $ zIsDef $ Right $ Word $ Var [smt|y|] $ guarded_type int

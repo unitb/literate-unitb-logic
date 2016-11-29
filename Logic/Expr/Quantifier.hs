@@ -18,6 +18,8 @@ import Data.Serialize
 import GHC.Generics
 import GHC.Generics.Instances
 
+import Language.Haskell.TH.Syntax hiding (Name,Type)
+
 import Test.QuickCheck
 import Test.QuickCheck.ZoomEq
 
@@ -75,6 +77,12 @@ instance PrettyPrintable HOQuantifier where
 instance PrettyPrintable FOQuantifier where
     pretty FOForall = "forall"
     pretty FOExists = "exists"
+
+instance Lift HOQuantifier where
+    lift = genericLift
+
+instance Lift QuantifierType where
+    lift = genericLift
 
 instance NFData QuantifierType
 instance NFData FOQuantifier

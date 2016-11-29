@@ -77,8 +77,9 @@ well_definedness (Binder q vs r t _) = case q of
                         fin = case finiteness q of
                                 FiniteWD -> ($typeCheck) $ mzfinite $ zcomprehension vs (Right r) (Right $ ztuple $ map Word vs)
                                 InfiniteWD -> ztrue
+well_definedness (Cast WDGuarded e _) = fromRight' $ typ_fun1 isDef_fun (Right e)
 well_definedness (Cast _ e _) = well_definedness e
-well_definedness (Lift e _) = well_definedness e
+well_definedness (Lift e _)   = well_definedness e
 well_definedness (FunApp fun xs) 
         | view name fun == [smt|and|]   = linearRecurse zall zsome id
         | view name fun == [smt|or|]    = linearRecurse zsome zall znot

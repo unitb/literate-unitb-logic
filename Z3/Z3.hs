@@ -258,7 +258,7 @@ smoke_test lbl po = discharge lbl (po & goal .~ zfalse)
 discharge_on :: Label -> Sequent -> IO (MVar (Either String Validity))
 discharge_on lbl po = do
     res <- newEmptyMVar
-    forkIO $ do
+    _   <- forkIO $ do
         r <- try (discharge lbl po)
         let f e = show (e :: SomeException)
             r'  = mapLeft f r

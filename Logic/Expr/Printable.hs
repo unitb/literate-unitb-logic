@@ -11,6 +11,9 @@ import Control.DeepSeq
 import Data.Typeable
 
 import GHC.Generics
+import GHC.Generics.Instances
+
+import Language.Haskell.TH.Syntax
 
 import Test.QuickCheck
 import Test.QuickCheck.ZoomEq
@@ -60,3 +63,6 @@ instance FromDispExpr Expr where
 
 instance FromDispExpr DispExpr where
     fromDispExpr = id
+
+instance Lift DispExpr where
+    lift = genericLift

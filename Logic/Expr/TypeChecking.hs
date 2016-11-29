@@ -11,12 +11,12 @@ import Logic.Theories.SetTheory
 
     -- Libraries
 
-import Control.Lens 
-        ((^.),(^?),(&),(%~)
-        ,_Left,_Right,view)
+import Control.Lens hiding (Context)
+        -- ((^.),(^?),(&),(%~)
+        -- ,_Left,_Right,view,to,_1)
 import Control.Lens.Misc
 import Control.Monad
--- import Control.Precondition
+import Control.Precondition
 
 import           Data.Either
 import           Data.Either.Combinators (mapLeft)
@@ -93,19 +93,27 @@ checkTypes expected_t c ue xs = do
         strToErr = \msg -> Error msg li
 
 checkTypes' :: Context -> UntypedExpr -> Either [String] Expr
-checkTypes' c (Word (Var n ())) = do
+checkTypes' c e = do
+        e' <- checkTypes'' c e
+        case type_of e'^?_Params guarded_sort of
+            Just [t] -> return $ Cast WDGuarded e' t
+            Just _  -> undefined'
+            Nothing -> return e'
+
+checkTypes'' :: Context -> UntypedExpr -> Either [String] Expr
+checkTypes'' c (Word (Var n ())) = do
     v <- bind (n `M.lookup` (c^.constants))
         ([s|%s is undeclared|] $ pretty n)
     return $ Word v
-checkTypes' _ (Lit n ()) = do
+checkTypes'' _ (Lit n ()) = do
     let t = case n of 
              RealVal _ -> real
              IntVal _  -> int
     return (Lit n t)
-checkTypes' c (FunApp f args) = do
+checkTypes'' c (FunApp f args) = do
     let targs = map (checkTypes' c) args
     check_type f targs
-checkTypes' c (Record (FieldLookup e field) _) = do
+checkTypes'' c (Record (FieldLookup e field) _) = do
     e' <- checkTypes' c e
     let t = type_of e'
     trecs <- bind (t^?fieldTypes)
@@ -113,17 +121,17 @@ checkTypes' c (Record (FieldLookup e field) _) = do
     t' <- bind (field `M.lookup` trecs)
         ([s|Record %s of type %s has no field %s|] (pretty e) (pretty t) (pretty field))
     return (Record (FieldLookup e' field) t')
-checkTypes' c (Record (RecUpdate e table) _) = do
+checkTypes'' c (Record (RecUpdate e table) _) = do
     e' <- checkTypes' c e
     let t = type_of e'
     t' <- bind (t^?fieldTypes)
         ([s|Expression %s is not a record|] (pretty e))
     m <- traverseValidation (checkTypes' c) table
     return $ Record (RecUpdate e' m) (record_type $ M.union (type_of <$> m) t')
-checkTypes' c (Record (RecLit table) _) = do
+checkTypes'' c (Record (RecLit table) _) = do
     m <- traverseValidation (checkTypes' c) table
     return $ Record (RecLit m) $ record_type $ type_of <$> m
-checkTypes' c (Record (RecSet table) _) = do
+checkTypes'' c (Record (RecSet table) _) = do
     -- let isSet e = maybe (Left undefined') (Right . (,e)) . preview _ElementType . type_of $ e
         -- msg = [s|Expression %s has type %s but should have a set type|]
     -- m <- traverseValidation (isSet <=< zcast (set_type gA) . Right <=< checkTypes' c) table
@@ -132,17 +140,17 @@ checkTypes' c (Record (RecSet table) _) = do
     --     t' = fst <$> m
     -- return $ Record (RecSet m') $ record_type t'
     zrecord_set $ Right <$> m
-checkTypes' c (Cast ct e t) = do
+checkTypes'' c (Cast ct e t) = do
     e' <- zcast t $ checkTypes' c e
     return (Cast ct e' t)
-checkTypes' c (Lift e _) = do
+checkTypes'' c (Lift e _) = do
     let phonyFun t = Fun [] [smt|lift|] Lifted [t] int FiniteWD
         setT = set_type gA
         arrayT = array gA gB
         mkLift _ e t = Lift (head e) (head t)
     check_type' mkLift (phonyFun setT) [checkTypes' c e] `tryBoth`
         check_type' mkLift (phonyFun arrayT) [checkTypes' c e] 
-checkTypes' c' (Binder q vs' r t _) = do
+checkTypes'' c' (Binder q vs' r t _) = do
     let c  = newContext vs' c'
         ns = map (view name) vs' :: [Name]
         vs = M.elems $ newDummies vs' c'

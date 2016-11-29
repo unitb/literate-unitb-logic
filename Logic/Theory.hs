@@ -46,10 +46,11 @@ all_theories' th = M.unions $ view extends th : M.elems (M.map all_theories' $ v
 basic_theory :: Theory
 basic_theory = make_theory' "basic" $ do 
         types .= symbol_table [BoolSort, pair_sort, set_sort]
-        funs  .= symbol_table [const_fun,ident_fun]
+        funs  .= symbol_table [const_fun,ident_fun,isDef_fun]
         fact  .= fromList 
            [ (label "@basic@@_0", axm0) 
-           , (label "@basic@@_1", axm1) ]
+           , (label "@basic@@_1", axm1) 
+           , (label "@basic@@_2", axm2) ]
         syntacticThm .= empty_monotonicity
             { _associative = fromList 
                     [(nAnd,   mztrue)
@@ -80,6 +81,9 @@ basic_theory = make_theory' "basic" $ do
             zselect (zconst x) y .=. x
         axm1 = $typeCheck $ mzforall [x_decl] mztrue $
             zselect zident x .=. x
+        axm2 = $typeCheck $ mzforall [x_decl] mztrue $
+            zIsDef (guardedJust x)
+        guardedJust = typ_fun1 $ mk_fun [gA] [smt|Just|] [] (guarded_type gA)
 
 
 

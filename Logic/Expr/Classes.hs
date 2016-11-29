@@ -22,6 +22,8 @@ import Data.Monoid
 import Data.Tuple
 import Data.Typeable.Lens
 
+import Text.Pretty
+
 class HasName a n | a -> n where
     name :: Getter a n
 
@@ -108,6 +110,9 @@ show' (Str s)   = D.fromList s
 
 instance Show StrList where
     show = D.toList . show'
+
+instance PrettyPrintable StrList where
+    pretty = show
 
 fold_mapM :: Monad m => (a -> b -> m (a,c)) -> a -> [b] -> m (a,[c])
 fold_mapM _ s [] = return (s,[])

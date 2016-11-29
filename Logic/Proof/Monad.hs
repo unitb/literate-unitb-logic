@@ -6,7 +6,6 @@ import Logic.Expr.Parser
 import Logic.Expr.Printable
 import Logic.Proof.Sequent
 import Logic.Theories
-import Logic.Theory
 import Logic.WellDefinedness
 
     -- Libraries
