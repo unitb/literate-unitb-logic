@@ -224,6 +224,7 @@ test = test_cases "genericity"
         , aCase "Testing the parser (\\neg (-2) = 2)" case24 result24
         , aCase "Testing the type checker (to add WD guards)" case25 result25
         , aCase "WD of guarded values" case26 result26
+        , aCase "WD of guarded values with conjunction" case27 result27
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -635,3 +636,24 @@ case26 = return $ well_definedness $ getExpr $ c [expr| x = y |]
 
 result26 :: Expr
 result26 = $typeCheck $ zIsDef $ Right $ Word $ Var [smt|y|] $ guarded_type int
+
+case27 :: IO Expr
+case27 = return $ well_definedness $ getExpr $ c [expr| y \land (x \lor y) |]
+    where
+        c = ctx $ do
+                decls %= M.union (symbol_table 
+                        [ Var x bool
+                        , Var y $ guarded_type bool ])
+                expected_type .= Nothing
+        x = [smt|x|]
+        y = [smt|y|]
+
+result27 :: Expr
+result27 = zsome
+        [ yDef `zand` y `zand` (x `zor` (yDef `zand` y))
+        , yDef `zand` znot y
+        , znot x `zand` yDef `zand` znot y ]
+    where
+        x = Word $ Var [smt|x|] bool
+        y = Word $ Var [smt|y|] $ guarded_type bool
+        yDef = fromRight' $ zIsDef $ Right y

@@ -21,6 +21,7 @@ is_true e@(Lit _ _) = e
 is_true (Binder Forall vs r t tt) = Binder Forall vs ztrue (is_true $ r `zimplies` t) tt
 is_true (Binder Exists vs r t tt) = Binder Exists vs ztrue (is_true $ r `zand` t) tt
 is_true (Binder (UDQuant _ _ _ _) _ _ _ _) = undefined'
+is_true (Cast WDGuarded e _) = fromRight' (typ_fun1 isDef_fun (Right e)) `zand` e
 is_true (Cast _ e _) = is_true e
 is_true (Lift e _) = is_true e
 is_true e@(FunApp fun xs) 
@@ -41,6 +42,7 @@ is_false e@(Lit _ _) = znot e
 is_false (Binder Forall vs r t tt) = Binder Exists vs ztrue (is_false $ r `zimplies` t) tt
 is_false (Binder Exists vs r t tt) = Binder Forall vs ztrue (is_false $ r `zand` t) tt
 is_false (Binder (UDQuant _ _ _ _) _ _ _ _) = undefined'
+is_false (Cast WDGuarded e _) = fromRight' (typ_fun1 isDef_fun (Right e)) `zand` znot e
 is_false (Cast _ e _) = is_false e
 is_false (Lift e _) = is_false e
 is_false e@(FunApp fun xs) 
