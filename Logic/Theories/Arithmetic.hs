@@ -63,7 +63,7 @@ znat_set = zcomprehension [n_decl] (0 .<= n) n
 
 arithmetic :: Theory
 arithmetic = (empty_theory' "arithmetic") { 
-        _extends = symbol_table [set_theory]
+        _extends = symbol_table [set_theory,basic_theory]
         , _types = symbol_table [IntSort,RealSort]
         , _funs = symbol_table 
             [ sum_fun gA 

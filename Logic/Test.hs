@@ -665,3 +665,18 @@ result27 = zsome
         x = Word $ Var [smt|x|] bool
         y = Word $ Var [smt|y|] $ guarded_type bool
         yDef = fromRight' $ zIsDef $ Right y
+
+case28 :: IO ()
+case28 = do
+        evaluate $ M.foldr deepseq () 
+                $ M.mapWithKey (\k -> mapException (f k).force.firstOrderSequent.flip assumingTheory e) xs
+    where
+        f :: Name -> SomeException -> ErrorCall
+        f n = ErrorCall . [s|error in: %s\n%s|] (pretty n) . displayException
+        xs = supportedTheories `M.union` preludeTheories
+        x = Var [smt|x|] bool
+        y = Var [smt|y|] $ guarded_type bool
+        e = zforall [x,y] ztrue result27
+
+result28 :: ()
+result28 = ()

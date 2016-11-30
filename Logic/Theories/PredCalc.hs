@@ -96,6 +96,7 @@ zrep_select = typ_fun2 (mk_fun [] [smt|select|] [pred_type gA, gA] bool)
 
 pred_calc :: Theory
 pred_calc = make_theory' "predcalc" $ do
+          extends .= symbol_table [basic_theory]
           types .= symbol_table [pred_sort]
           funs  .= symbol_table [everywhere_fun, ptrue_fun, pfalse_fun]
           fact  .= M.singleton (label "pred_ew") (fromRight' $ 

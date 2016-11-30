@@ -54,7 +54,7 @@ set_theory = Theory { .. }
         gT = GENERIC $ z3Name "t"
 
         _theory'Name = z3Name "sets"
-        _extends = M.empty
+        _extends = symbol_table [basic_theory]
         _consts  = M.empty
         _theory'Dummies = M.empty
         _types = M.empty

@@ -9,6 +9,7 @@ result10 = unlines
     , "(declare-datatypes (a b) ( (Pair (pair (first a) (second b))) ))"
     , "(declare-datatypes (a1 a2)"
     , "                   ( (Record-b-x (Record-b-x (@@field@@_b a1) (@@field@@_x a2))) ))"
+    , "(define-sort guarded (a) (Maybe a))"
     , "; comment: we don't need to declare the sort Bool"
     , "; comment: we don't need to declare the sort Int"
     , "; comment: we don't need to declare the sort Real"
@@ -26,6 +27,7 @@ result10 = unlines
     , "                          (then (using-params simplify :expand-power true) smt)))"
     ]
 
+
 result11 :: String
 result11 = unlines
     [ "(set-option :auto-config false)"
@@ -35,6 +37,7 @@ result11 = unlines
     , "(declare-datatypes (a b) ( (Pair (pair (first a) (second b))) ))"
     , "(declare-datatypes (a1 a2)"
     , "                   ( (Record-b-x (Record-b-x (@@field@@_b a1) (@@field@@_x a2))) ))"
+    , "(define-sort guarded (a) (Maybe a))"
     , "; comment: we don't need to declare the sort Bool"
     , "; comment: we don't need to declare the sort Int"
     , "; comment: we don't need to declare the sort Real"
@@ -235,6 +238,19 @@ result11 = unlines
     , "                             (card@Open@@Record-b-x@@Bool@@Int@Close r0))))"
     , "                   :pattern"
     , "                   ( (card@Open@@Record-b-x@@Bool@@Int@Close (union r r0)) ))))"
+    , "(assert (forall ( (x (Record-b-x Bool Int))"
+    , "                  (y (Record-b-x Bool Int)) )"
+    , "                (! (= (select (const@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                              y)"
+    , "                      x)"
+    , "                   :pattern"
+    , "                   ( (select (const@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                             y) ))))"
+    , "(assert (forall ( (x (Record-b-x Bool Int)) )"
+    , "                (! (= (select ident@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                      x)"
+    , "                   :pattern"
+    , "                   ( (select ident@Open@@Record-b-x@@Bool@@Int@Close x) ))))"
     , "(assert (forall ( (x Bool)"
     , "                  (y Bool) )"
     , "                (! (= (elem@@Bool x (mk-set@@Bool y)) (= x y))"
@@ -349,6 +365,19 @@ result11 = unlines
     , "                      r1)"
     , "                   :pattern"
     , "                   ( (set@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close r1 ident@Open@@Record-b-x@@Bool@@Int@Close) ))))"
+    , "(assert (forall ( (x (Record-b-x Bool Int))"
+    , "                  (y (Record-b-x Bool Int)) )"
+    , "                (! (= (select (const@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                              y)"
+    , "                      x)"
+    , "                   :pattern"
+    , "                   ( (select (const@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                             y) ))))"
+    , "(assert (forall ( (x (Record-b-x Bool Int)) )"
+    , "                (! (= (select ident@Open@@Record-b-x@@Bool@@Int@Close x)"
+    , "                      x)"
+    , "                   :pattern"
+    , "                   ( (select ident@Open@@Record-b-x@@Bool@@Int@Close x) ))))"
     , "(assert (forall ( (x (Record-b-x Bool Int))"
     , "                  (y (Record-b-x Bool Int)) )"
     , "                (! (= (select (const@Open@@Record-b-x@@Bool@@Int@Close@Open@@Record-b-x@@Bool@@Int@Close x)"
@@ -509,5 +538,4 @@ result11 = unlines
     , "                          (then skip smt)"
     , "                          (then (using-params simplify :expand-power true) smt)))"
     ]
-
 

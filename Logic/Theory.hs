@@ -16,6 +16,8 @@ module Logic.Theory
     , basic_theory
     , symbols
     , HasDefs(..)
+    , assumingTheory
+    , allSyntacticThms
     , types, funs, consts, theorems
     , thm_depend, notation, extends )
 where
@@ -32,6 +34,7 @@ import Logic.Theory.Monad
 
     -- Libraries
 import Control.Lens hiding (Context,from,to,rewriteM)
+import Control.Precondition
 
 import           Data.Foldable as F
 import           Data.List as L
@@ -45,7 +48,7 @@ all_theories' th = M.unions $ view extends th : M.elems (M.map all_theories' $ v
 
 basic_theory :: Theory
 basic_theory = make_theory' "basic" $ do 
-        types .= symbol_table [BoolSort, pair_sort, set_sort]
+        types .= symbol_table [BoolSort, pair_sort, set_sort, guarded_sort]
         funs  .= symbol_table [const_fun,ident_fun,isDef_fun]
         fact  .= fromList 
            [ (label "@basic@@_0", axm0) 
@@ -83,7 +86,7 @@ basic_theory = make_theory' "basic" $ do
             zselect zident x .=. x
         axm2 = fromRight' $ mzforall [x_decl] mztrue $
             zIsDef (guardedJust x)
-        guardedJust = typ_fun1 $ mk_fun [gA] [smt|Just|] [] (guarded_type gA)
+        guardedJust = typ_fun1 $ mk_fun [gA] [smt|Just|] [gA] (guarded_type gA)
 
 
 
@@ -128,3 +131,9 @@ instance HasExpr expr => HasScope (Theory' expr) where
             , withVars (symbols $ t & defs .~ M.empty)
                 $ foldMapWithKey scopeCorrect'' $ t^.defs
             , foldMapWithKey scopeCorrect'' (t^.extends) ]
+
+allSyntacticThms :: Theory -> SyntacticProp
+allSyntacticThms t = foldMap (view syntacticThm) $ all_theories t
+
+assumingTheory :: Pre => Theory -> Expr -> Sequent
+assumingTheory t = makeSequent (theory_ctx t) (allSyntacticThms t) (elems $ theory_facts t) M.empty

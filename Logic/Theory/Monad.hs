@@ -164,7 +164,6 @@ dummy :: (VarSignature s) => String -> s -> M ExprP
 dummy n s = do
     let v = varDecl name s
         name = fromString'' n
-    tellTheory $ dummies <>= singleton name v
     return $ Right $ Word v
 
 command :: forall s. (FromList (FunType s) ExprP, Signature s)
@@ -306,6 +305,9 @@ clash f xs
             y      <- ys
             return $ M.intersection (f x) (f y)
 
+extendTheory :: Theory -> M ()
+extendTheory t = M $ _2.extends %= insert_symbol t
+
 make_theory' :: Pre 
              => String -> State Theory () -> Theory
 make_theory' name cmd = make_theory name $ M $ zoom _2 (state $ runState cmd)
@@ -317,8 +319,8 @@ make_theory name (M cmd) = t'
         name' = fromString'' name
         ((_,t),es) = execRWS cmd () (0,empty_theory name')
         es' = zipWith (\i -> (pad i,)) [0..] es
-        t' = t & fact %~ M.union (fromList es')
-        n = length $ show $ length es
+        t'  = t & fact %~ M.union (fromList es')
+        n   = length $ show $ length es
         pad m = label $ name ++ replicate (n - length (show m)) ' ' ++ show m
 
 tellTheory :: State Theory () -> M ()

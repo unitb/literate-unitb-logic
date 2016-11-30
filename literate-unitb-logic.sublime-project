@@ -126,7 +126,7 @@
                 "*.md"
             ],
             "path": "suite"
-        },
+        }
         // {
         //     "file_include_patterns":
         //     [

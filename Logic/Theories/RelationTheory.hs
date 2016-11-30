@@ -14,6 +14,7 @@ relation_theory :: Theory
 relation_theory = make_theory "relations" $ do
     -- rel_type <- sort_def "relation" $ \gA gB -> 
     --     set_type (pair_type gA gB)
+    extendTheory set_theory
     let rel_type gA gB = set_type (pair_type gA gB)
         rel_type :: Type -> Type -> Type
         -- id' = id :: Type -> Type

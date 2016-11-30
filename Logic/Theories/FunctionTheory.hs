@@ -102,7 +102,7 @@ t1 = VARIABLE $ fromString'' "t1"
 function_theory :: Theory 
 function_theory = Theory { .. }
     where        
-        _extends =  symbol_table [set_theory]
+        _extends =  symbol_table [set_theory,basic_theory]
         _theory'Name = fromString'' "functions"
         _consts   = empty
         _theory'Dummies  = empty
