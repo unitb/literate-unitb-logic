@@ -65,7 +65,7 @@ packages:
     commit: 0e430c7a0571b31d980bf4141197ec6c19b964b6
 - location:
     git: https://github.com/unitb/pretty-printable.git
-    commit: 1adc34c9f88a5e9fec25d39cd193aec65c4625e9
+    commit: 85485a415d2098bb1a7ed8dc1ca412221a09720b
 - location:
     git: https://github.com/unitb/data-packaged.git
     commit: cfd83405a7573cfa458cb2b25f79565e14316e70
