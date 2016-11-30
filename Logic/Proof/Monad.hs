@@ -189,6 +189,11 @@ declare :: Pre
 declare n t = do
         declare' $ Var (fromString'' n) t
 
+declare_ :: Pre
+         => String -> Type -> SequentM ()
+declare_ n t = do
+        void $ declare' $ Var (fromString'' n) t
+
 declare' :: Pre
          => Var -> SequentM' expr ExprP
 declare' v = do

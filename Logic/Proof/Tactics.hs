@@ -32,6 +32,7 @@ import Logic.Proof.Sequent
 
     -- Libraries
 import Control.Arrow
+import Control.DeepSeq
 import Control.Lens hiding (Context)
 import Control.Precondition
 
@@ -730,3 +731,6 @@ intersections = intersectionsWith const
 --by_antisymmetry :: Monad m 
 --                => BinOperator 
 --                -> 
+
+instance NFData (Tactic Proof) where
+    rnf x = seq x () 

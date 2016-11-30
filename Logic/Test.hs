@@ -516,7 +516,7 @@ result17 = fromRight' $ rec `zelem` set
 
 case18 :: IO Validity
 case18 = discharge("case13") $ _goal $ runSequent' $ do
-    declare "x" int
+    declare_ "x" int
     checkQ $ [expr| x = x |]
 
 result18 :: Validity
@@ -524,7 +524,7 @@ result18 = Valid
 
 case19 :: IO Validity
 case19 = discharge("case14") $ _goal $ runSequent' $ do
-    declare "x" int
+    declare_ "x" int
     include set_theory
     checkQ $ [expr| x \in \{x\} |]
 
@@ -533,7 +533,7 @@ result19 = Valid
 
 case20 :: IO Validity
 case20 = discharge("case15") $ _goal $ runSequent' $ do
-    declare "x" int
+    declare_ "x" int
     assumeQ "x = x" [expr| x = x |]
     checkQ $ [expr| \neg x = x |]
 
@@ -570,7 +570,7 @@ case22 = discharge "case22" $ _goal $ runSequent' $ do
                 bar ## int
         x   = [field|x|]
         bar = [field|bar|]
-    declare "r" t
+    declare_ "r" t
     assumeQ "r = [ 'x := \true, 'bar := 7 ]" [expr| r = [ 'x := \true, 'bar := 7 ] |]
     checkQ  [expr| r.'bar = 8 |]
 
