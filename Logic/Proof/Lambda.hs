@@ -15,6 +15,7 @@ import Logic.Proof.Sequent
 import Control.DeepSeq
 import Control.Lens hiding (Context,Context',rewriteM)
 import Control.Monad.State
+import Control.Precondition
 
 import           Data.Default
 import           Data.List as L hiding (union)
@@ -170,7 +171,7 @@ lambda_def = do
                     eq :: ExprPG InternalName Type FOQuantifier
                     eq  = mzeq app (Right e)
                     res :: Expr'
-                    res = ($typeCheck) $ mzforall (vs ++ us) mztrue eq
+                    res = fromRight' $ mzforall (vs ++ us) mztrue eq
                 return $ res
 
 delambdify :: Sequent -> Sequent'
@@ -221,7 +222,7 @@ lambdas (Binder (UDQuant fn _ _ _) vs r t _) = do
     let vs' = L.map translate vs
     select_r <- make_canonical Range vs' r'
     select_t <- make_canonical Term vs' t'
-    let select = ($typeCheck) $ check_type (fn & namesOf %~ asInternal) [select_r,select_t]
+    let select = fromRight' $ check_type (fn & namesOf %~ asInternal) [select_r,select_t]
         -- careful here! we expect this expression to be type checked already 
     return select
 lambdas (Binder Forall vs r t et) = do

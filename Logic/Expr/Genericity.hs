@@ -528,7 +528,7 @@ gen_to_fol :: (IsQuantifier q,IsName n,Pre)
            -> [(Label,AbsExpr InternalName FOType q)]
 gen_to_fol types lbl e = map (f &&& inst) xs
     where
-        inst m = mk_error ("gen_to_fol", types_of $ e' m)
+        inst m = mk_error ("gen_to_fol", (types_of $ e' m,e))
                     strip_generics $ e' m
         e' m   = substitute_type_vars (M.map as_generic m) e
         xs     = match_all pat (S.elems types)
@@ -574,7 +574,7 @@ to_fol_ctx types (Context s vars funs defs dums) =
                 def' = substitute_types f def
                 f (GENERIC s) = VARIABLE s
                 f t = rewrite f t
-        fdm = MM.fromJust . var_strip_generics
+        fdm = fromJust' . var_strip_generics
 
 match_all :: [Type] -> [FOType] -> [Map InternalName FOType]
 match_all pat types = 

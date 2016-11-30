@@ -125,7 +125,7 @@
                 "*hs",
                 "*.md"
             ],
-            "path": "app"
+            "path": "suite"
         },
         // {
         //     "file_include_patterns":

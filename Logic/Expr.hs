@@ -17,7 +17,7 @@ import Logic.Expr.Classes
 import Logic.Expr.Const hiding (var)
 import Logic.Expr.Context
 import Logic.Expr.Declaration
-import Logic.Expr.Expr  hiding (fromEither)  
+import Logic.Expr.Expr  
 import Logic.Expr.Genericity hiding ( Generic, variables )
 import Logic.Expr.Label
 import Logic.Expr.PrettyPrint

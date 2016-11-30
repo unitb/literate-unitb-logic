@@ -1,19 +1,24 @@
-{-# LANGUAGE OverloadedStrings,TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings,TypeFamilies,QuasiQuotes #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Logic.Test where
 
     -- Modules
 import Logic.Expr hiding (field)
 import Logic.Expr.Const
 import Logic.Expr.Parser
+import Logic.Proof
 import Logic.Proof.Monad
 import Logic.QuasiQuote hiding (var)
 import Logic.Test.Stable
+import Logic.Theory
 import Logic.Theories
 import Logic.WellDefinedness
 
 import Z3.Z3
 
     -- Libraries
+import Control.DeepSeq
+import Control.Exception
 import Control.Lens hiding (lifted,Context,Const)
 import Control.Monad
 import Control.Precondition
@@ -32,6 +37,8 @@ import Test.QuickCheck.Regression
 import Test.QuickCheck.Report
 
 import Test.UnitTest hiding (name)
+
+import Text.Printf.TH
 
 import Utilities.MapSyntax
 import Utilities.Syntactic
@@ -225,6 +232,7 @@ test = test_cases "genericity"
         , aCase "Testing the type checker (to add WD guards)" case25 result25
         , aCase "WD of guarded values" case26 result26
         , aCase "WD of guarded values with conjunction" case27 result27
+        , aCase "default theories type check" case28 result28
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -378,8 +386,8 @@ case11 = return $ z3_code $ _goal $ runSequent' $ do
             b = [field|b|]
         v1 <- declare "v1" t
         v2 <- declare "v2" t
-        assume "v1: x:=7, b:=true" $ v1 .=. zrecord' (x ## 7 >> b ## mztrue)
-        assume "v2 \\in ['x : {7}, 'b : (all:\\Bool)]" $ v2 `zelem`
+        assume "expr: { v1: x:=7, b:=true }" $ v1 .=. zrecord' (x ## 7 >> b ## mztrue)
+        assume "expr: { v2 \\in ['x : {7}, 'b : (all:\\set[ \\Bool])] }" $ v2 `zelem`
                     mk_zrecord_set (x ## zmk_set 7 >> b ## zcast (set_type bool) zset_all)
         check $ v1 .=. v2
 
@@ -635,7 +643,7 @@ case26 = return $ well_definedness $ getExpr $ c [expr| x = y |]
         y = [smt|y|]
 
 result26 :: Expr
-result26 = $typeCheck $ zIsDef $ Right $ Word $ Var [smt|y|] $ guarded_type int
+result26 = fromRight' $ zIsDef $ Right $ Word $ Var [smt|y|] $ guarded_type int
 
 case27 :: IO Expr
 case27 = return $ well_definedness $ getExpr $ c [expr| y \land (x \lor y) |]

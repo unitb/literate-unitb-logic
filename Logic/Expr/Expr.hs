@@ -40,7 +40,6 @@ import qualified Data.Set as S
 import GHC.Generics hiding (to,from)
 import GHC.Generics.Instances
 
-import Language.Haskell.TH hiding (Type,Name)
 import Language.Haskell.TH.Syntax hiding (Type,Name)
 
 import Test.QuickCheck
@@ -812,14 +811,3 @@ instance (Serialize n,Serialize q,Serialize t)
 
 makePrisms ''GenExpr
 makePrisms ''RecordExpr
-
-fromEither :: Loc -> Either [String] a -> a
-fromEither _ (Right x)  = x
-fromEither loc (Left msg) = error $ unlines $ map ([s|\n%s\n%s|] loc') msg
-    where
-        loc' :: String
-        loc' = locMsg loc
-
-
-typeCheck :: ExpQ
-typeCheck = withLoc 'fromEither

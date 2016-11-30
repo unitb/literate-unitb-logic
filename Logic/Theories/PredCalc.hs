@@ -10,6 +10,7 @@ import Logic.Theory
     -- Libraries
 import Control.Lens
 import Control.Lens.Misc
+import Control.Precondition
 
 import qualified Data.Map as M
 
@@ -97,7 +98,7 @@ pred_calc :: Theory
 pred_calc = make_theory' "predcalc" $ do
           types .= symbol_table [pred_sort]
           funs  .= symbol_table [everywhere_fun, ptrue_fun, pfalse_fun]
-          fact  .= M.singleton (label "pred_ew") (($typeCheck) $ 
+          fact  .= M.singleton (label "pred_ew") (fromRight' $ 
                 mzforall [x_decl] mztrue $ 
                         (zew x)
                     `mzeq` (mzforall [y_decl] mztrue $ zrep_select x y) )

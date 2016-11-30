@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase, CPP
         , TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Logic.Expr.Type where
 
     -- Modules

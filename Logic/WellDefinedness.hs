@@ -77,7 +77,7 @@ well_definedness (Binder q vs r t _) = case q of
                         t' = well_definedness r
                                 `zand` (r `zimplies` well_definedness t)
                         fin = case finiteness q of
-                                FiniteWD -> ($typeCheck) $ mzfinite $ zcomprehension vs (Right r) (Right $ ztuple $ map Word vs)
+                                FiniteWD -> fromRight' $ mzfinite $ zcomprehension vs (Right r) (Right $ ztuple $ map Word vs)
                                 InfiniteWD -> ztrue
 well_definedness (Cast WDGuarded e _) = fromRight' $ typ_fun1 isDef_fun (Right e)
 well_definedness (Cast _ e _) = well_definedness e
@@ -88,7 +88,7 @@ well_definedness (FunApp fun xs)
         | view name fun == [smt|=>|]    = well_definedness 
                                        $ znot x0 `zor` x1
         | view name fun == [smt|apply|] = zall $ 
-                                        (($typeCheck) $ x1' `zelem` zdom x0')
+                                        (fromRight' $ x1' `zelem` zdom x0')
                                       : map well_definedness xs
         | view name fun == [smt|ite|]   = zall [ well_definedness x0
                                                , x0 `zimplies` well_definedness x1
