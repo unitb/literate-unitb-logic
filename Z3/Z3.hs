@@ -5,6 +5,7 @@ module Z3.Z3
     , Validity ( .. )
     , Satisfiability ( .. )
     , discharge_all
+    , discharge_all'
     , discharge, verify
     , dischargeBoth
     , Context
@@ -44,6 +45,7 @@ import Control.DeepSeq
 import Control.Lens hiding (Context,Context')
 
 import Control.Concurrent
+import Control.Concurrent.Async
 import Control.Concurrent.SSem
 
 import Control.Exception
@@ -265,6 +267,11 @@ discharge_on lbl po = do
         putMVar res r'
     return res
 
+
+discharge_all' :: TraversableWithIndex Label t
+               => t Sequent -> IO (t Validity)
+discharge_all' =
+        runConcurrently . itraverse (fmap Concurrently . discharge)
 
 discharge_all :: [(Label,Sequent)] -> IO [Validity]
 discharge_all xs = do
