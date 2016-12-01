@@ -86,7 +86,7 @@ basic_theory = make_theory' "basic" $ do
             zselect zident x .=. x
         axm2 = fromRight' $ mzforall [x_decl] mztrue $
             zIsDef (guardedJust x)
-        guardedJust = typ_fun1 $ mk_fun [gA] [smt|Just|] [gA] (guarded_type gA)
+        guardedJust = typ_fun1 $ mk_fun [] [smt|Just|] [gA] (guarded_type gA)
 
 
 
