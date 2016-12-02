@@ -811,3 +811,6 @@ instance (Serialize n,Serialize q,Serialize t)
 
 makePrisms ''GenExpr
 makePrisms ''RecordExpr
+
+_Arguments :: (Eq n,Eq a) => AbsFun n a -> Prism' (GenExpr n t a q) [GenExpr n t a q]
+_Arguments f = _FunApp.swapped.aside (only f).iso fst (,())
