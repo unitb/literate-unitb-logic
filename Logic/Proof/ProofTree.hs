@@ -1,5 +1,6 @@
-{-# LANGUAGE ExistentialQuantification  #-}
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ExistentialQuantification
+           , TemplateHaskell
+           , OverloadedStrings          #-}
 module Logic.Proof.ProofTree where
 
     -- Modules

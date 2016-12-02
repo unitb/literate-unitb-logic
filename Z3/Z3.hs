@@ -207,6 +207,9 @@ data Z3Command = Decl FODecl
         | Comment String
     deriving (Generic)
 
+instance PrettyPrintable Validity where
+    pretty = show
+
 z3_code :: Sequent -> String
 z3_code = makePretty . z3_commands
 

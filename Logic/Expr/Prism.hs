@@ -1,6 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Logic.Expr.Prism 
     ( module Logic.Names 
-    -- , module Record 
     , fun )
 where
 

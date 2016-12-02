@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators
-    , TypeFamilies #-}
+    , TypeFamilies
+    , TemplateHaskell #-}
 module Logic.Proof.Sequent where
 
     -- Modules

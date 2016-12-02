@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies,TemplateHaskell #-}
 module Logic.Expr.Context where
 
     -- Module

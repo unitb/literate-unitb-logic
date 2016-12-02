@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings,TypeFamilies,QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings,TypeFamilies,QuasiQuotes,TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Logic.Test where
 

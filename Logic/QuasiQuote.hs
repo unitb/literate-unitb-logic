@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators
     ,QuasiQuotes 
+    ,TemplateHaskell
     #-}
 module Logic.QuasiQuote
     ( module Logic.QuasiQuote

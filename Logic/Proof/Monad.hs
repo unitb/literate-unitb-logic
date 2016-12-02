@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Logic.Proof.Monad where
 
     -- Modules

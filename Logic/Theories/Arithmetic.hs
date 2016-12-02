@@ -77,43 +77,43 @@ arithmetic = (empty_theory' "arithmetic") {
               , (("<=","-"),  Side (Just zge') 
                                    (Just zle')) ] }
         , _fact = "arithmetic" `axioms` do
-                $axiom $ 
+                axiom $ 
                     asum zempty_set term `mzeq` mzint 0
 
-                $axiom $ 
+                axiom $ 
                     (mznot $ x `zelem` r) .=>
                          asum (r `zunion` zmk_set x) term  
                     .=. (asum r term .+ zselect term x)
 
-                $axiom $ 
+                axiom $ 
                     (r `zintersect` r' .=. zempty_set) .=>
                          asum (r `zunion` r') term 
                     .=. (asum r term .+ asum r' term)
 
-                $axiom $ mzfinite r .=>
+                axiom $ mzfinite r .=>
                     mzint 0 .<= zcard r
 
-                $axiom $ 
+                axiom $ 
                     zcard r .=. mzint 0  .==.  r .=. zempty_set
 
-                $axiom $ 
+                axiom $ 
                     zcard (zmk_set x) .=. mzint 1
 
-                $axiom $
+                axiom $
                          zcard r .=. mzint 1
                     .==. mzexists [x_decl] mztrue (r .=. zmk_set x)
 
                     -- dangerous!
-                -- $axiom $ 
+                -- axiom $ 
                 --     mznot (x `zelem` r) .=>
                 --          zcard (r `zunion` zmk_set x)
                 --     .=.  zcard r .+ mzint 1
 
-                $axiom $ 
+                axiom $ 
                     r `zintersect` r' .=. zempty_set .=>
                          zcard (r `zunion` r')
                     .=.  zcard r .+ zcard r'            
-                $axiom $
+                axiom $
                     zcard r .=. typ_fun2 (sum_fun gA) r (zconst $ mzint 1)
 
             -- fromList $ L.map (first $ label . dec')

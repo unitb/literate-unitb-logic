@@ -41,7 +41,7 @@ packages:
     commit: 0f1629aa99c0a74bccd4e98e63960361175d16c6
 - location:
     git: https://github.com/unitb/unitb-testing.git
-    commit: 6098f62adcb956a5ba924b8cc2f6ac550d4f65f9
+    commit: 9d3036afb6adf9ee00435fc6fa98e6a3cc604241
 - location:
     git: https://github.com/unitb/transformer-lenses.git
     commit: 405f81025293b9f9cd25145644ca86fe88a69388

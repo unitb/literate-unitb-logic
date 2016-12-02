@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Logic.Expr.Parser.Internal.Setting where
 
     -- Modules

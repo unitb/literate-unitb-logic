@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Logic.Proof.POGenerator 
     ( POGen, POGenT -- Logic.Proof.POGenerator.context
     , emit_goal, emit_goal'

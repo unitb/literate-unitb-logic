@@ -49,7 +49,7 @@
             "folder_exclude_patterns": [".stack-work"],
             "file_include_patterns":
             [
-                "*.cabal", "stack.yaml"
+                "*.cabal", "stack.yaml", ".travis.yml"
             ],
             "path": "."
         },

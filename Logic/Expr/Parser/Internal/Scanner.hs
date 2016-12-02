@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PatternSynonyms,TemplateHaskell #-}
 module Logic.Expr.Parser.Internal.Scanner where
 
     -- Modules

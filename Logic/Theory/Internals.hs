@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP,TemplateHaskell #-}
 module Logic.Theory.Internals where
 
     -- Modules

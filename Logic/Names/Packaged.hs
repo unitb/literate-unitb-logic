@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies,CPP #-}
+{-# LANGUAGE TypeFamilies,CPP,TemplateHaskell #-}
 module Logic.Names.Packaged
     ( Name, InternalName
     , IsName(..)

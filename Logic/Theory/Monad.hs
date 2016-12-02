@@ -23,17 +23,16 @@ import Control.Lens hiding (Context,from,to,rewriteM)
 import Control.Precondition
 
 import           Data.Either
-import           Data.Either.Combinators
+import           Data.Either.Combinators hiding (fromRight')
 import           Data.List as L
 import           Data.Map as M
 import qualified Data.Set as S
 import           Data.Typeable
 
-import Language.Haskell.TH hiding (Type,Name)
+import GHC.Stack
 
 import Text.Printf.TH
 
-import Utilities.Error
 import Utilities.Tuple
 
 class Signature s where
@@ -150,15 +149,14 @@ instance TypeSignature s => TypeSignature (Type -> s) where
     mkSort' s ts t = mkSort' s (t:ts)
     order Proxy = 1 + order (Proxy :: Proxy s)
 
-assert' :: Loc -> ExprP -> M ()
-assert' loc stmt = do
+assert :: Pre => ExprP -> M ()
+assert stmt = do
     M $ tell [x]
     where
-        x = either (error . unlines . L.map (locMsg loc ++)) id 
-            $ zcast bool $ withForall stmt
+        x = fromRight' $ zcast bool $ withForall stmt
 
-assert :: ExpQ
-assert = withLoc 'assert'
+-- assert :: ExpQ
+-- assert = withLoc 'assert'
 
 dummy :: (VarSignature s) => String -> s -> M ExprP
 dummy n s = do
@@ -213,11 +211,11 @@ associativity fun e = tellTheory $ do
 
 left_associativity :: [Operator] -> M ()
 left_associativity ops = tellTheory $ do
-        notation.left_assoc <>= [L.map (fromRight $ $myError "") ops]
+        notation.left_assoc <>= [L.map fromRight' ops]
 
 right_associativity :: [Operator] -> M ()
 right_associativity ops = tellTheory $ do
-        notation.right_assoc <>= [L.map (fromRight $ $myError "") ops]
+        notation.right_assoc <>= [L.map fromRight' ops]
 
 precedence :: [Operator] 
            -> [[Operator]]
@@ -344,8 +342,8 @@ mzexists' vs r t = do
             _ -> Left ["Cannot quantify over expressions"])
     mzexists vs' r t
 
-declAxiom :: Loc -> ExprP -> Writer [ExprP] ()
-declAxiom loc stmt = tell [mapLeft (L.map (locMsg loc ++)) $ zcast bool $ withForall stmt]
+axiom :: Pre => ExprP -> Writer [ExprP] ()
+axiom stmt = tell [mapLeft (L.map (showCallStack ?loc ++)) $ zcast bool $ withForall stmt]
 
 withForall :: ExprP -> ExprP 
 withForall mx = do
@@ -353,13 +351,10 @@ withForall mx = do
     let vs = S.toList $ used_var x
     param_to_var <$> mzforall vs mztrue (Right x)
 
-axiom :: ExpQ
-axiom = withLoc 'declAxiom
-
 axioms :: String -> Writer [ExprP] () -> M.Map Label Expr
 axioms name cmd
         | L.null ls = fromList $ L.map (first $ label . [s|@%s@@_%s|] name) $ zip ns rs
-        | otherwise = error $ unlines $ concat ls
+        | otherwise = assertFalse' $ unlines $ concat ls
     where
         n  = length rs
         ns = L.map (pad . show) [1..n]

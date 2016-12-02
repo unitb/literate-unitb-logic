@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies,TemplateHaskell #-}
 module Logic.Expr.Scope 
     ( HasPrefix(..) 
     , module Logic.Expr.Scope )

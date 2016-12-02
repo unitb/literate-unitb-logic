@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators
     , OverloadedStrings
+    , TemplateHaskell
     , UndecidableInstances   #-}
 module Logic.Proof.Tactics 
     ( Tactic, TacticT, get_line_info, get_context
