@@ -1,4 +1,5 @@
 {-# LANGUAGE KindSignatures
+    , CPP
     , TypeFamilies
     , TypeOperators
     , ScopedTypeVariables
@@ -341,6 +342,11 @@ mzexists' vs r t = do
             Word v -> return v
             _ -> Left ["Cannot quantify over expressions"])
     mzexists vs' r t
+
+#if MIN_VERSION_base(4,9,0)
+showCallStack :: CallStack -> String
+showCallStack = prettyCallStack
+#endif
 
 axiom :: Pre => ExprP -> Writer [ExprP] ()
 axiom stmt = tell [mapLeft (L.map (showCallStack ?loc ++)) $ zcast bool $ withForall stmt]
