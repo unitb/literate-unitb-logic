@@ -19,8 +19,21 @@
             "name": "Haskell / Literate Unit-B",
             "selector": "source.haskell",
             "working_dir": "${project_path}"
-        },
-        {
+        },{
+            "name": "nightly",
+            "cmd": [ "stack", "build"
+                   , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
+                   , "--test", "--no-run-tests"
+                   , "--resolver","nightly" 
+                   , "--stack-yaml", "$project_path/stack-nightly.yaml" ],
+        },{
+            "name": "nightly - test",
+            "cmd": [ "stack", "test"
+                   , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
+                   , "--test", "--no-run-tests"
+                   , "--resolver","nightly" 
+                   , "--stack-yaml", "$project_path/stack-nightly.yaml" ],
+        },{
             "cmd":
             [
                 "diff_fail"

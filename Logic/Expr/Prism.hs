@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Logic.Expr.Prism 
     ( module Logic.Names 
+    , module Logic.Expr.Prism 
     , fun )
 where
 
@@ -29,13 +30,21 @@ fun = QuasiQuoter
         , quoteDec  = undefined }
 
 {-# INLINE selectFun #-}
-selectFun :: Eq n => n -> Traversal' (AbsFun n t,[GenExpr n t a q]) [GenExpr n t a q]
-selectFun fn f (fn',args') | fn == (fn'^.name) = (fn',) <$> f args'
-                           | otherwise         = pure (fn',args')
+selectFun :: Eq n => n -> Traversal' (GenExpr n t a q) [GenExpr n t a q]
+selectFun x = _FunApp . selectFun' x
+
+selectFun' :: Eq n => n -> Traversal' (AbsFun n a,[GenExpr n t a q]) [GenExpr n t a q]
+selectFun' fn f (fn',args') | fn == (fn'^.name) = (fn',) <$> f args'
+                            | otherwise         = pure (fn',args')
+
+matchLength :: Int 
+            -> ( [GenExpr n t a q] -> k )
+            -> Fold [GenExpr n t a q] k
+matchLength recSize f = filtered ((recSize ==) . length) . to f
 
 zipRecord' :: [Maybe String] -> ExpQ
 zipRecord' args = 
-        [e| filtered (($recSize ==) . length) . (\f _args -> phantom $ f $(myLet)) :: Fold [GenExpr n t a q] $(recType) |]
+        [e| matchLength ($recSize) (\_args -> $(myLet)) |]
     where
         recSize = litE $ integerL $ fromIntegral $ length fieldPos
         decs = map (binding . snd) fieldPos
@@ -45,10 +54,10 @@ zipRecord' args =
         myLet = letE decs $ tupE [ varE (mkName $ "x" ++ show i) | (_,i) <- fieldPos ]
         fieldPos = mapMaybe (sequenceOf _1) $ zip args [0..]
         (n,t,a,q) = ("n","t","a","q") & each %~ (varT . mkName)
-        recType  = appsT $ tupleT (length fieldPos) : replicate (length fieldPos) [t| GenExpr $n $t $a $q |]
+        -- recType  = appsT $ tupleT (length fieldPos) : replicate (length fieldPos) [t| GenExpr $n $t $a $q |]
 
 funPrism :: Pattern -> ExpQ 
-funPrism (Pattern f args) = [e| _FunApp . selectFun (fromName f) . $(zipRecord' args) |]
+funPrism (Pattern f args) = [e| selectFun (fromName f) . $(zipRecord' args) |]
 
 fieldTuple :: [String] -> PatQ
 fieldTuple kw = tupP $ map (varP . mkName) kw
