@@ -6,8 +6,10 @@ module Logic.Test where
 import Logic.Expr hiding (field)
 import Logic.Expr.Const
 import Logic.Expr.Parser
+import Logic.Expr.Prism
+import Logic.Expr.Scope
 import Logic.Proof
-import Logic.Proof.Monad
+import Logic.Proof.Monad hiding (vars)
 import Logic.QuasiQuote hiding (var)
 import Logic.Test.Stable
 import Logic.Theory
@@ -21,13 +23,22 @@ import Control.DeepSeq
 import Control.Exception
 import Control.Lens hiding (lifted,Context,Const)
 import Control.Monad
+import Control.Monad.State
 import Control.Precondition
 
+import Data.Default
 import Data.Hashable
+import Data.List as L hiding (union)
 import Data.Map hiding ( map, union, member )
 import qualified Data.Map as M
 import Data.PartialOrd
 import qualified Data.Set as S
+
+import Language.Haskell.TH.Lens
+import Language.Haskell.TH.Ppr hiding (Type,Name)
+import Language.Haskell.TH.Quote hiding (Type,Name)
+import Language.Haskell.TH.Syntax hiding (Type,Name)
+import qualified Language.Haskell.TH.Syntax as TH 
 
 import Test.QuickCheck
 import Test.QuickCheck.AxiomaticClass
@@ -233,6 +244,9 @@ test = test_cases "genericity"
         , aCase "WD of guarded values" case26 result26
         , aCase "WD of guarded values with conjunction" case27 result27
         , aCase "default theories type check" case28 result28
+        , stringCase "test scopes" case29 result29
+        , stringCase "QuasiQuotes for function application" case30 result30
+        , stringCase "Pattern matching on function application" case31 result31
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -680,3 +694,98 @@ case28 = do
 
 result28 :: ()
 result28 = ()
+
+case29 :: IO String
+case29 = return 
+        $ unlines . L.map (uncurry $ \x y -> x ++ "\n" ++ y)
+        $ scopeCorrect' 
+            (getExpr $ c [expr|\qforall{x}{}{x \le y + z} |]) 
+            (def & vars .~ symbol_table [Var y int])
+    where
+        c = ctx $ do
+                decls %= M.union (symbol_table 
+                        [ Var z int
+                        , Var y int ])
+                expected_type .= Nothing
+        -- x = [smt|x|]
+        y = [smt|y|]
+        z = [smt|z|]
+
+result29 :: String
+result29 = unlines
+    [ ""
+    , ""
+    , "./Logic/Test.hs:701:11 - scopeCorrect'"
+    , "./Logic/Expr/Expr.hs:645:9 - areVisible"
+    , ""
+    , " free vars = [y,z]"
+    , " declared  = [y]"
+    , " diff      = [z]"
+    , "(forall ((x \\Int)) (=> true (<= x (+ y z))))"
+    ]
+
+case30 :: IO String
+case30 = fmap (pprint . unqualifyE) . runQ $ quoteExp fun "(and $x $y)"
+
+case31 :: IO String
+case31 = fmap (pprint . unqualifyP) . runQ $ quotePat fun "(= $x $y)"
+
+result30 :: String
+result30 = intercalate "\n"
+    [ "_FunApp . (selectFun (fromName (name False ((:|) 'a' ['n',"
+    , "                                                      'd']) 0 \"\" Z3Encoding)) . (filtered ((2 ==) . length) . (\\f_0 _args_1 -> phantom $ f (let {x0 = _args !! 0;"
+    , "                                                                                                                                                 x1 = _args !! 1}"
+    , "                                                                                                                                             in (x0,"
+    , "                                                                                                                                                 x1))) :: forall n_2 t_3 a_4 q_5 . Fold ([GenExpr n_2"
+    , "                                                                                                                                                                                                  t_3"
+    , "                                                                                                                                                                                                  a_4"
+    , "                                                                                                                                                                                                  q_5])"
+    , "                                                                                                                                                                                        ((GenExpr n"
+    , "                                                                                                                                                                                                  t"
+    , "                                                                                                                                                                                                  a"
+    , "                                                                                                                                                                                                  q,"
+    , "                                                                                                                                                                                          GenExpr n"
+    , "                                                                                                                                                                                                  t"
+    , "                                                                                                                                                                                                  a"
+    , "                                                                                                                                                                                                  q))))"
+    ]
+
+result31 :: String
+result31 = intercalate "\n"
+    [ "(preview (_FunApp . (selectFun (fromName (name False ((:|) '=' []) 0 \"\" Z3Encoding)) . (filtered ((2 ==) . length) . (\\f _args -> phantom $ f (let {x0 = _args !! 0;"
+    , "                                                                                                                                                    x1 = _args !! 1}"
+    , "                                                                                                                                                in (x0,"
+    , "                                                                                                                                                    x1))) :: forall n_0 t_1 a_2 q_3 . Fold ([GenExpr n_0"
+    , "                                                                                                                                                                                                     t_1"
+    , "                                                                                                                                                                                                     a_2"
+    , "                                                                                                                                                                                                     q_3])"
+    , "                                                                                                                                                                                           ((GenExpr n"
+    , "                                                                                                                                                                                                     t"
+    , "                                                                                                                                                                                                     a"
+    , "                                                                                                                                                                                                     q,"
+    , "                                                                                                                                                                                             GenExpr n"
+    , "                                                                                                                                                                                                     t"
+    , "                                                                                                                                                                                                     a"
+    , "                                                                                                                                                                                                     q))))) -> Just (x,"
+    , "                                                                                                                                                                                                                     y))"
+    ]
+
+unqualifyE :: Exp -> Exp
+unqualifyE = transform $ execState $ do
+            _VarE %= dropQual
+            _ConE %= dropQual
+            _SigE._2 %= unqualifyT
+
+unqualifyT :: TH.Type -> TH.Type
+unqualifyT = transform $ execState $ do
+            _ConT %= dropQual
+
+unqualifyP :: Pat -> Pat
+unqualifyP = transform $ execState $ do
+            _VarP %= dropQual
+            _ConP._1 %= dropQual
+            _ViewP._1 %= unqualifyE
+
+dropQual :: TH.Name -> TH.Name
+dropQual (TH.Name b _) = TH.Name b NameS
+
