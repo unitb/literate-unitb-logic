@@ -126,6 +126,23 @@ scan_expr n = do
 match_char :: Token a => (a -> Bool) -> Scanner a a
 match_char p = read_if p return (fail "")
 
+bracketedJunk :: Scanner Char ()
+bracketedJunk = do
+    _ <- read_list "{"
+    bracketedJunk' 1
+
+bracketedJunk' :: Int -> Scanner Char ()
+bracketedJunk' 0 = return ()
+bracketedJunk' n = do
+    _ <- many (match_char (`notElem` "{}")) 
+        -- , bracketedJunk ]
+        -- (return ()) return)
+    n' <- choice 
+        [ (n+1) <$ read_list "{"
+        , (n-1) <$ read_list "}" ] (fail "") return
+    bracketedJunk' n'
+
+
 eat_space :: Scanner Char ()
 eat_space = do
         b <- is_eof
@@ -133,9 +150,8 @@ eat_space = do
         then return ()
         else choice 
                 [ match_char isSpace >> return ()
-                , do _ <- read_list "\\begin{array}{" 
-                     _ <- many (match_char (/= '}')) 
-                     _ <- read_list "}"
+                , do _ <- read_list "\\begin{array}" 
+                     bracketedJunk
                      return ()
                 , read_list "\\end{array}" >> return ()
                 , read_list "\\left" >> return ()

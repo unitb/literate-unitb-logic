@@ -35,6 +35,7 @@ import Data.PartialOrd
 import qualified Data.Set as S
 
 import Language.Haskell.TH.Lens
+import Language.Haskell.TH.Unqualify
 import Language.Haskell.TH.Ppr hiding (Type,Name)
 import Language.Haskell.TH.Quote hiding (Type,Name)
 import Language.Haskell.TH.Syntax hiding (Type,Name)
@@ -247,6 +248,7 @@ test = test_cases "genericity"
         , stringCase "test scopes" case29 result29
         , stringCase "QuasiQuotes for function application" case30 result30
         , stringCase "Pattern matching on function application" case31 result31
+        , aCase "parsing expressions encoded in arrays" case32 result32
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -715,7 +717,7 @@ result29 :: String
 result29 = unlines
     [ ""
     , ""
-    , "./Logic/Test.hs:701:11 - scopeCorrect'"
+    , "./Logic/Test.hs:703:11 - scopeCorrect'"
     , "./Logic/Expr/Expr.hs:645:9 - areVisible"
     , ""
     , " free vars = [y,z]"
@@ -748,22 +750,16 @@ result31 = intercalate "\n"
     , "                                                                                                                         y))"
     ]
 
-unqualifyE :: Exp -> Exp
-unqualifyE = transform $ execState $ do
-            _VarE %= dropQual
-            _ConE %= dropQual
-            _SigE._2 %= unqualifyT
+case32 :: IO Expr
+case32 = return $ getExpr $ c [expr|
+            \begin{array}{r@{}l}
+              & 3 \\
+            + & 7
+            \end{array}
+            |]
+    where
+        c = ctx $ expected_type .= Nothing
 
-unqualifyT :: TH.Type -> TH.Type
-unqualifyT = transform $ execState $ do
-            _ConT %= dropQual
-
-unqualifyP :: Pat -> Pat
-unqualifyP = transform $ execState $ do
-            _VarP %= dropQual
-            _ConP._1 %= dropQual
-            _ViewP._1 %= unqualifyE
-
-dropQual :: TH.Name -> TH.Name
-dropQual (TH.Name b _) = TH.Name b NameS
+result32 :: Expr
+result32 = fromRight' $ mzint 3 .+ mzint 7
 

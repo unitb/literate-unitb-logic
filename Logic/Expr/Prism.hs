@@ -1,8 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Logic.Expr.Prism 
     ( module Logic.Names 
-    , module Logic.Expr.Prism 
-    , fun )
+    , module Logic.Expr.Prism )
 where
 
     -- Modules
@@ -13,14 +12,12 @@ import Logic.Names
     -- Libraries
 import Control.Lens hiding (uncons)
 
-import Data.Functor.Contravariant
 import Data.List.Lens
 import Data.Maybe
 import Data.String.Utils
 
 import Language.Haskell.TH hiding (Name)
 import Language.Haskell.TH.Quote
-import Language.Haskell.TH.Utils
 
 fun :: QuasiQuoter
 fun = QuasiQuoter 
@@ -53,8 +50,6 @@ zipRecord' args =
                          (normalB [e| $(varE $ mkName "_args") !! $(litE $ integerL $ fromIntegral n) |]) []
         myLet = letE decs $ tupE [ varE (mkName $ "x" ++ show i) | (_,i) <- fieldPos ]
         fieldPos = mapMaybe (sequenceOf _1) $ zip args [0..]
-        (n,t,a,q) = ("n","t","a","q") & each %~ (varT . mkName)
-        -- recType  = appsT $ tupleT (length fieldPos) : replicate (length fieldPos) [t| GenExpr $n $t $a $q |]
 
 funPrism :: Pattern -> ExpQ 
 funPrism (Pattern f args) = [e| selectFun (fromName f) . $(zipRecord' args) |]
