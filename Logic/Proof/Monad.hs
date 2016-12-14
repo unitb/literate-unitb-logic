@@ -179,40 +179,52 @@ assumeE (lbl, str) = do
         collectDeclaration e
         SequentM $ tell' $ asms .= M.singleton (label lbl) e -- tell ([],[],[e],[])
 
-collectDeclaration :: HasExpr expr
+withContext :: Context -> SequentM' expr ()
+withContext = SequentM . tell' . assign ctxs . pure
+
+withDeclarations :: State Context a -> SequentM' expr ()
+withDeclarations = withContext . flip execState mempty
+
+collectDeclaration :: (HasExpr expr,Monad m)
                    => expr
-                   -> SequentM' expr0 ()
+                   -> SequentT expr0 m ()
 collectDeclaration e = SequentM $ do
         let ts = types_of (getExpr e)^.partsOf (to S.toList.traverse.foldSorts)
         tell' $ sorts .= ts -- tell (ts,[],[],[])
 
-check :: Pre
-      => ExprP -> SequentM Expr
+check :: (Pre,Monad m)
+      => ExprP -> SequentT expr m Expr
 check e = do
         let e' = fromRight' e
         collectDeclaration e'
         return e'
 
-checkQ :: Pre
-        => (ParserSetting -> DispExpr) -> SequentM Expr
+checkQ :: (Pre,Monad m)
+       => (ParserSetting -> DispExpr) 
+       -> SequentT expr m Expr
 checkQ qexpr = do
         setting <- SequentM $ use _1
         check $ Right $ getExpr $ qexpr setting
 
-checkE :: StringLi -> SequentM Expr
+checkE :: MonadError [Error] m
+       => StringLi 
+       -> SequentT expr m Expr
 checkE str = do
         de <- checkE' str
         let e = getExpr de
         collectDeclaration e
         return e
 
-checkE' :: StringLi -> SequentM' expr DispExpr
+checkE' :: MonadError [Error] m
+        => StringLi 
+        -> SequentT expr m DispExpr
 checkE' str = do
         setting <- SequentM $ use _1
         hoistEither $ parse_expr setting str
 
-declare :: Pre
-        => String -> Type -> SequentM ExprP
+declare :: (Pre,Monad m)
+        => String -> Type 
+        -> SequentT expr m ExprP
 declare n t = do
         declare' $ Var (fromString'' n) t
 
@@ -221,8 +233,9 @@ declare_ :: Pre
 declare_ n t = do
         void $ declare' $ Var (fromString'' n) t
 
-declare' :: Pre
-         => Var -> SequentM' expr ExprP
+declare' :: Monad m
+         => Var 
+         -> SequentT expr m ExprP
 declare' v = do
         collectDeclaration $ Word v
         SequentM $ do
@@ -247,6 +260,7 @@ parseDeclarations ts str = withExpr $ do
     return vs
     where
         withExpr = runSequent'' :: SequentM a -> Either [Error] a
+hoistEither :: MonadError [Error] m
+            => Either [Error] a -> SequentT expr m a
+hoistEither = SequentM . either throwError return
 
-hoistEither :: Either [Error] a -> SequentM' expr a
-hoistEither = SequentM . lift
