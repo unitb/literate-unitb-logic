@@ -23,7 +23,6 @@ import Control.DeepSeq
 import Control.Exception
 import Control.Lens hiding (lifted,Context,Const)
 import Control.Monad
-import Control.Monad.State
 import Control.Precondition
 
 import Data.Default
@@ -34,12 +33,10 @@ import qualified Data.Map as M
 import Data.PartialOrd
 import qualified Data.Set as S
 
-import Language.Haskell.TH.Lens
 import Language.Haskell.TH.Unqualify
-import Language.Haskell.TH.Ppr hiding (Type,Name)
-import Language.Haskell.TH.Quote hiding (Type,Name)
+import Language.Haskell.TH.Ppr 
+import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax hiding (Type,Name)
-import qualified Language.Haskell.TH.Syntax as TH 
 
 import Test.QuickCheck
 import Test.QuickCheck.AxiomaticClass

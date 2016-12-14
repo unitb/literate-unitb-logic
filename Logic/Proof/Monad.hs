@@ -5,12 +5,13 @@ module Logic.Proof.Monad where
 import Logic.Expr
 import Logic.Expr.Parser
 import Logic.Expr.Printable
-import Logic.Proof.Sequent
+import Logic.Proof.Sequent hiding (makeSequent)
 import Logic.Theories
 import Logic.WellDefinedness
 
     -- Libraries
 import Control.Lens hiding (Context)
+import Control.Monad.Except
 import Control.Monad.RWS hiding ((<>))
 import Control.Monad.State
 import Control.Precondition
@@ -25,12 +26,13 @@ import Utilities.Syntactic
 
 type SequentM = SequentM' Expr
 
-newtype SequentM' expr a = SequentM (
-        RWST
-          ()
-          (SeqDefinitions expr)
-          (ParserSetting,[Theory],Map Name Var)
-          (Either [Error]) a)
+type SequentM' expr = SequentT expr (Either [Error])
+newtype SequentT expr m a = SequentM 
+        { unSequentM :: RWST
+              ()
+              (SeqDefinitions expr)
+              (ParserSetting,[Theory],Map Name Var)
+              m a }
     deriving (Functor,Applicative,Monad)
 
 type DispSequent = HOSequent DispExpr
@@ -70,8 +72,15 @@ runSequent (SequentM cmd) =
                     (unSequentM (mapM_ include preludeTheories) >> cmd)
                     ()
                     (undefined', [], M.empty)
-    where
-        unSequentM (SequentM m) = m
+
+runSequentT :: (HasExpr expr, FromDispExpr expr, Monad m)
+            => SequentT expr m expr
+            -> m (SequentWithWD' expr)
+runSequentT (SequentM cmd) =
+    mkSequent <$> evalRWST
+                    (unSequentM (mapM_ include preludeTheories) >> cmd)
+                    ()
+                    (undefined', [], M.empty)
 
 runSequent' :: Pre
             => SequentM Expr -> SequentWithWD
@@ -104,7 +113,21 @@ mkSequent (g, (SeqDefinitions s vs asm thms ctx)) = SequentWithWD
         & context %~ merge_ctx (merge_all_ctx ctx)
     }
 
-updateSetting :: SequentM' expr ()
+makeSequent :: (HasExpr expr, FromDispExpr expr)
+            => SequentM' expr expr
+            -> SequentM' expr (HOSequent expr)
+makeSequent (SequentM cmd) = SequentM $ do
+        (e,w) <- listen cmd
+        s <- get
+        lift $ runSequent_ (SequentM $ put s >> tell w >> return e)
+
+mapSequentT :: (forall c c'. m (a,c,c') -> n (b,c,c'))
+            -> SequentT expr m a
+            -> SequentT expr n b
+mapSequentT f (SequentM m) = SequentM $ mapRWST f m
+
+updateSetting :: Monad m
+              => SequentT expr m ()
 updateSetting = SequentM $ do
     ts <- use _2
     _1 .= theory_setting (empty_theory' "empty") { _extends =
@@ -112,13 +135,14 @@ updateSetting = SequentM $ do
     ds <- use _3
     _1.decls %= M.union ds
 
-tell' :: (Monoid w,MonadWriter w m)
+tell' :: (MonadWriter w m)
       => State w k
       -> m ()
 tell' cmd = tell $ execState cmd mempty
 
-include :: FromDispExpr expr
-        => Theory -> SequentM' expr ()
+
+include :: (FromDispExpr expr,Monad m)
+        => Theory -> SequentT expr m ()
 include t = do
     SequentM $ do
         --tell ([],[],M.elems $ theory_facts t,[theory_ctx t])
@@ -132,14 +156,16 @@ assume :: Pre
        => String -> ExprP -> SequentM ()
 assume s e = assume' s (fromRight' e)
 
-assume' :: HasExpr expr
-        => String -> expr -> SequentM' expr ()
+assume' :: (HasExpr expr,Monad m)
+        => String -> expr 
+        -> SequentT expr m ()
 assume' lbl e = do
         collectDeclaration e
         SequentM $ tell' $ asms .= M.singleton (label lbl) e -- tell ([],[],[e'],[])
 
-assumeQ :: (FromDispExpr expr,HasExpr expr, Pre)
-        => String -> (ParserSetting -> DispExpr) -> SequentM' expr ()
+assumeQ :: (FromDispExpr expr,HasExpr expr,Monad m)
+        => String -> (ParserSetting -> DispExpr) 
+        -> SequentT expr m ()
 assumeQ lbl qexpr = do
         setting <- SequentM $ use _1
         assume' lbl $ fromDispExpr $ qexpr setting

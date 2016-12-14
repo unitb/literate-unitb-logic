@@ -59,7 +59,7 @@ instance (TypeSystem t,IsName n) => Tree (AbsVar n t) where
         return $ Expr.List [Str $ render vn, t]
     rewriteM _ = pure
 
-instance (TypeSystem t, IsName n) => Typed (AbsVar n t) where
+instance (TypeSystem t) => Typed (AbsVar n t) where
     type TypeOf (AbsVar n t) = t
     type_of (Var _ t) = t
 
@@ -84,7 +84,7 @@ z3Var = Var . fromString''
 instance HasName (AbsVar n t) n where
     name = to $ \(Var x _) -> x
 
-instance IsName n => HasNames (AbsVar n t) n where
+instance HasNames (AbsVar n t) n where
     type SetNameT n' (AbsVar n t) = AbsVar n' t
     namesOf f (Var x t) = Var <$> f x <*> pure t
 

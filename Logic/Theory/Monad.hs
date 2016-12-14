@@ -165,7 +165,7 @@ dummy n s = do
         name = fromString'' n
     return $ Right $ Word v
 
-command :: forall s. (FromList (FunType s) ExprP, Signature s)
+command :: forall s. (Signature s)
         => Name -> s -> M (FunType s)
 command n s = do
     let name = addBackslash n

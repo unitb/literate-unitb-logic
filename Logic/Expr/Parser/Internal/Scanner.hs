@@ -18,6 +18,7 @@ import           Data.Char
 
 import Text.Printf.TH
 
+pattern Number :: String -> ExprToken
 pattern Number x = Literal (NumLit x)
 
 data Bracket = Curly | QuotedCurly | Round | Square

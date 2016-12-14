@@ -111,7 +111,7 @@ makeName = view (from name) . Intl.makeName
 addSuffix :: String -> InternalName -> InternalName
 addSuffix suf = internal %~ Intl.addSuffix suf
 
-setSuffix :: Pre => String -> Name -> Name
+setSuffix :: String -> Name -> Name
 setSuffix suf = name %~ Intl.setSuffix suf
 
 dropSuffix :: InternalName -> InternalName

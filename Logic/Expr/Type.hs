@@ -197,7 +197,7 @@ recordName m = makeZ3Name $ "Record-" ++ intercalate "-" (map fieldName $ M.keys
 accessor :: Field -> String
 accessor = render . accessorName
 
-accessorName :: Pre => Field -> InternalName
+accessorName :: Field -> InternalName
 accessorName (Field n) = addPrefix "field" $ asInternal n
 
 fieldName :: Field -> String

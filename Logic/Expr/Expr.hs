@@ -207,7 +207,7 @@ instance (IsName n) => Translatable
         (GenExpr InternalName t a q) where
     translate = fmap3 asInternal
 
-make_unique :: (IsGenExpr expr, Name ~ NameT expr,Pre)
+make_unique :: (IsGenExpr expr, Name ~ NameT expr)
             => String               -- suffix to be added to the name of variables
             -> M.Map Name var       -- set of variables that must renamed
             -> expr                 -- expression to rewrite
@@ -403,7 +403,7 @@ typesOf' :: Traversal (AbsExpr n t0 q) (AbsExpr n t1 q)
                       t0 t1
 typesOf' f = rewriteExprM f pure (typesOf' f)
 
-instance IsName n => HasNames (GenExpr n t a q) n where
+instance HasNames (GenExpr n t a q) n where
     type SetNameT n' (GenExpr n t a q) = GenExpr n' t a q
     namesOf = traverse3
 
@@ -451,7 +451,7 @@ instance Traversable2 AbsDef where
           <*> g d 
           <*> traverseOn3 f g g h e
 
-instance IsName n => HasNames (AbsDef n t q) n where
+instance HasNames (AbsDef n t q) n where
     type SetNameT m (AbsDef n t q) = AbsDef m t q
     namesOf = traverse2
 
@@ -749,7 +749,7 @@ primeOnly vs = freeVarsOf %~ pr
 defExpr :: Lens' (AbsDef n t q) (AbsExpr n t q) 
 defExpr f (Def ps n args rt e) = makeDef ps n args rt <$> f e
 
-funOf :: (TypeSystem t, IsQuantifier q, IsName n) 
+funOf :: (TypeSystem t) 
       => AbsDef n t q -> AbsFun n t
 funOf (Def ps n args rt _e) = Fun ps n Unlifted (map type_of args) rt InfiniteWD
 

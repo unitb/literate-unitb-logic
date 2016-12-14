@@ -92,7 +92,7 @@ emit_exist_goal' mkLbl lbl vars es = with
         clauses = partition_expr vars $ L.map getExpr es
         clauses' = M.toList $ (M.fromListWith (<>) clauses :: Map [Var] (NonEmpty Expr))
 
-existential :: (Monad m,Functor m) 
+existential :: (Monad m) 
             => [Var] 
             -> POGenT m () 
             -> POGenT m ()

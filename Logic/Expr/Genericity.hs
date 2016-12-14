@@ -98,14 +98,14 @@ class TypeSystem t => TypeSystem2 t where
 
 instance TypeSystem2 () where
     check_args' f fun xp = do
-            let ts = fun^.arguments
+            let ts = fun^.argumentTypes
             guard (length xp == length ts)
             return $ f fun xp ts
     zcast _ = id
 
 instance TypeSystem2 FOType where
     check_args' f fun xp = do
-            let ts = fun^.arguments
+            let ts = fun^.argumentTypes
             guard (fmap type_of xp == ts)
             return $ f fun xp ts
     zcast t me = do
@@ -401,7 +401,7 @@ instance (IsQuantifier q, Generic Type t', TypeSystem t',IsName n)
     instantiate' m x = substitute_types' (instantiate' m) x
     substitute_type_vars' m x = substitute_types' (substitute_type_vars' m) x
 
-instance (TypeSystem t, HasGenerics t,IsName n) => HasGenerics (AbsVar n t) where
+instance (TypeSystem t, HasGenerics t) => HasGenerics (AbsVar n t) where
     types_of (Var _ t)  = types_of t
 
 instance (TypeSystem t', Generic Type t',IsName n) => Generic (AbsVar n Type) (AbsVar n t') where
@@ -624,7 +624,7 @@ match_some pat types = nubSort $ do -- map (M.map head) ms -- do
             return $ M.map (const [ms']) ms' 
 
 --mk_error :: (Expr -> Maybe FOExpr) -> Expr -> Maybe FOExpr
-mk_error :: (Show a, Show c, Tree a, Pre) 
+mk_error :: (Show c, Tree a, Pre) 
          => c -> (a -> Maybe b) -> a -> b
 mk_error z f x = 
         case f x of

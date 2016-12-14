@@ -205,7 +205,7 @@ checkSequent s = byPred msg (const $ L.null xs) (Pretty s) s
         xs :: [Expr]
         xs  = snd $ execRWS (travAsserts >> travDefs) ctx ()
 
-expressions :: Getter (GenSequent n t q expr) [expr]
+expressions :: Getting r (GenSequent n t q expr) [expr]
 expressions = to $ \s -> (s^.goal) : (s^.nameless) ++ (M.elems $ s^.named)
 
 leftMono :: ArgDep a -> Maybe a
@@ -249,7 +249,7 @@ instance Monoid SyntacticProp where
     mconcat = genericMConcat
     mappend = genericMAppend
 
-empty_sequent :: (TypeSystem2 t,IsQuantifier q,HasGenExpr expr) 
+empty_sequent :: (HasGenExpr expr) 
               => GenSequent n t q expr
 empty_sequent = (Sequent 3000 1 empty_ctx empty_monotonicity [] M.empty ztrue)
 
@@ -451,7 +451,7 @@ apply_monotonicity po = fromMaybe po $
                 (c,x,y) <- differs_by_segment 
                     (flatten_assoc g0 xs) 
                     (flatten_assoc g0 ys)
-                let f = typ_fun2 $ g0 & arguments %~ take 2
+                let f = typ_fun2 $ g0 & argumentTypes %~ take 2
                     funApp (x:xs) = L.foldl' f (Right x) $ L.map Right xs
                     funApp [] = unit
                 return (c,fromRight'$ funApp x,fromRight'$ funApp y)

@@ -25,7 +25,7 @@ import Text.Printf.TH as Printf
 
 import Utilities.MapSyntax
 
-as_array :: TypeSystem t => t -> Name -> AbsExpr Name t q
+as_array :: t -> Name -> AbsExpr Name t q
 as_array t x = funApp (mk_lifted_fun [] x [] t) []
 
 map_array :: Name -> Type -> [ExprP] -> ExprP

@@ -84,7 +84,7 @@ class Tree a where
     as_tree   :: a -> StrList
     as_tree'  :: a -> Reader (OutputMode n) StrList
     as_tree x = runReader (as_tree' x) ProverOutput
-    rewriteM :: (Applicative m, Tree a) => (a -> m a) -> a -> m a
+    rewriteM :: (Applicative m) => (a -> m a) -> a -> m a
     default rewriteM :: (Applicative m, Data a) => (a -> m a) -> a -> m a
     rewriteM f t = gtraverse (_cast f) t
 
@@ -176,12 +176,12 @@ symbol_table = symbol_table' id
 decorated_table :: Named a => [a] -> Map InternalName a
 decorated_table xs = M.fromList $ L.map (\x -> (decorated_name x, x)) xs
 
-renameAll' :: (Ord n0,HasNames a n0,IsName n1,HasName (SetNameT n1 a) n1)
+renameAll' :: (IsName n1,HasName (SetNameT n1 a) n1)
            => (a -> SetNameT n1 a)
            -> Map n0 a -> Map n1 (SetNameT n1 a)
 renameAll' f = symbol_table . (traverse %~ f) . M.elems
 
-renameAll :: (Ord n0,HasNames a n0,IsName n1,HasName (SetNameT n1 a) n1)
+renameAll :: (HasNames a n0,IsName n1,HasName (SetNameT n1 a) n1)
           => (n0 -> n1)
           -> Map n0 a -> Map n1 (SetNameT n1 a)
 renameAll f = renameAll' (namesOf %~ f)

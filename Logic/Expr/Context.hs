@@ -83,7 +83,7 @@ instance (Ord n) => HasSymbols (GenContext n t q) () n where
             (Context _ a b c _) = ctx^.genContext
             f = M.map (const ())
 
-merge_ctx :: (Show t, TypeSystem t, IsQuantifier q,IsName n)
+merge_ctx :: (TypeSystem t, IsQuantifier q,IsName n)
           => GenContext n t q -> GenContext n t q 
           -> GenContext n t q
 merge_ctx (Context ss0 vs0 fs0 ds0 dum0) (Context ss1 vs1 fs1 ds1 dum1) = 
@@ -201,7 +201,7 @@ instance Traversable1 (GenContext n) where
             <*> traverse (traverse f) c
             <*> traverse (traverseOn1 f g) d
             <*> traverse (traverse f) e
-instance IsName n => HasNames (GenContext n t q) n where
+instance HasNames (GenContext n t q) n where
     type SetNameT m (GenContext n t q) = GenContext m t q
     namesOf f (Context a b c d e) = Context a 
             <$> traversePairs (onBoth f $ traverse1 f) b

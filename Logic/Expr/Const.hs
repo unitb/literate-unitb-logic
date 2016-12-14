@@ -44,18 +44,15 @@ type TwoExpr n t q = AbsExpr n t q -> AbsExpr n t q -> AbsExpr n t q
 
 type TwoGenExpr n t a q = GenExpr n t a q -> GenExpr n t a q -> GenExpr n t a q
 
-fun1 :: ( TypeSystem t )
-     => AbsFun n a
+fun1 :: AbsFun n a
      -> GenExpr n t a q -> GenExpr n t a q
 fun1 f x           = funApp f [x]
-fun2 :: ( TypeSystem t  )
-     => AbsFun n a -> GenExpr n t a q
+fun2 :: AbsFun n a -> GenExpr n t a q
      -> GenExpr n t a q -> GenExpr n t a q
 fun2 f x y         = funApp f [x,y]
 
-fun2' :: ( TypeSystem t  )
-     => AbsFun n a -> GenExpr n t a q
-     -> GenExpr n t a q -> GenExpr n t a q
+fun2' :: AbsFun n a -> GenExpr n t a q
+      -> GenExpr n t a q -> GenExpr n t a q
 fun2' f x y         = FunApp f [x,y]
 
 no_errors2 :: ( TypeSystem t 
@@ -72,7 +69,7 @@ toErrors li m = case m of
 not_fun :: (TypeSystem2 t,IsName n) => AbsFun n t
 not_fun = mk_fun [] [smt|not|] [bool] bool
 
-znot :: (TypeSystem2 t, IsQuantifier q,IsName n,TypeSystem2 a) 
+znot :: (IsName n,TypeSystem2 a) 
      => GenExpr n t a q
      -> GenExpr n t a q
 znot e = case e of 
@@ -81,7 +78,7 @@ znot e = case e of
                 | otherwise    -> fun1 not_fun e
             e' -> fun1 not_fun e'
     -- znot         = fun1 mznot
-zimplies :: (TypeSystem2 t, IsQuantifier q,IsName n,TypeSystem a,TypeAnnotationPair t a,TypeSystem2 a) 
+zimplies :: (TypeSystem2 t, IsQuantifier q,IsName n,TypeAnnotationPair t a,TypeSystem2 a) 
          => TwoGenExpr n t a q
 zimplies x y = runIdentity $ mzimplies' (liftA2 $ fun2 implies_fun) (pure x) (pure y)
 zand :: (TypeSystem2 t, IsQuantifier q,IsName n) => TwoExpr n t q
@@ -154,7 +151,7 @@ zsome xs'      =
         f x
             | x == zfalse = []
             | otherwise   = [x]
-zforall :: (TypeSystem2 t, IsQuantifier q,IsName n, Eq a, TypeAnnotationPair t a, TypeSystem2 a)
+zforall :: (TypeSystem2 t, IsQuantifier q,IsName n,TypeAnnotationPair t a, TypeSystem2 a)
         => [AbsVar n t] 
         -> TwoGenExpr n t a q
 zforall [] x y  = zimplies x y
@@ -268,7 +265,7 @@ mzsome xs = case toList xs of
         xs <- forM xs $ zcast bool
         return $ zsome xs
 
-mzforall :: (TypeSystem2 t, IsQuantifier q,IsName n) 
+mzforall :: (TypeSystem2 t,IsName n) 
          => [AbsVar n t] 
          -> TwoExprP n t q
 mzforall xs mx my = do
@@ -276,7 +273,7 @@ mzforall xs mx my = do
         y <- zcast bool my
         return $ zforall xs x y
 
-mzexists :: (TypeSystem2 t, IsQuantifier q,IsName n)
+mzexists :: (TypeSystem2 t,IsName n)
          => [AbsVar n t] 
          -> TwoExprP n t q
 mzexists xs mx my = do
@@ -305,7 +302,7 @@ zplus        = fun2 $ mk_fun [] [smt|+|] [int,int] int
 zminus :: (IsName n,TypeSystem2 t )=> AbsExpr n t q -> AbsExpr n t q -> AbsExpr n t q
 zminus       = fun2 $ mk_fun [] [smt|-|] [int,int] int
 
-zopp :: (IsName n,TypeSystem2 t,TypeSystem a )=> GenExpr n t a q -> GenExpr n t a q
+zopp :: (IsName n,TypeSystem a )=> GenExpr n t a q -> GenExpr n t a q
 zopp         = fun1 $ mk_fun [] [smt|-|] [int] int
 
 ztimes :: (IsName n,TypeSystem2 t )=> AbsExpr n t q -> AbsExpr n t q -> AbsExpr n t q
@@ -475,7 +472,7 @@ flattenConnectors = f . rewrite flattenConnectors
             | otherwise                = e
         f e = e
 
-zlift :: TypeSystem2 t => t -> AbsExpr n t q -> AbsExpr n t q
+zlift :: t -> AbsExpr n t q -> AbsExpr n t q
 zlift t e = Lift e t
 
 const_fun :: IsName n => AbsFun n Type

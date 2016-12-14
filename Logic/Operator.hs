@@ -165,7 +165,7 @@ commands :: Lens' Notation [Command]
 commands = lens _commands (\n x -> with_assoc $ n { _commands = x })
 quantifiers :: Lens' Notation [(Name,HOQuantifier)]
 quantifiers = lens _quantifiers (\n x -> with_assoc $ n { _quantifiers = x })
-struct :: Getter Notation (Matrix Operator Assoc)
+struct :: Getting r Notation (Matrix Operator Assoc)
 struct = to _struct
 
 instance Default Notation where

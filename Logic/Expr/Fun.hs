@@ -35,8 +35,8 @@ data AbsFun n t = Fun
         { _annotation :: ![t]
         , _funName :: !n
         , lifted :: !Lifting
-        , _arguments :: ![t] 
-        , _result :: !t
+        , _argumentTypes :: ![t] 
+        , _resultType :: !t
         , _finite :: !SetWD }
     deriving (Eq,Ord,Generic,Typeable,Data,Functor,Foldable,Traversable,Show)
 
@@ -113,7 +113,7 @@ mk_fun' ps = mk_fun ps . z3Name
 mk_fun :: [t] -> n -> [t] -> t -> AbsFun n t
 mk_fun  ps n ts t = Fun (evalList ps) n Unlifted (evalList ts) t InfiniteWD
 
-mk_lifted_fun :: IsName n => [t] -> n -> [t] -> t -> AbsFun n t
+mk_lifted_fun :: [t] -> n -> [t] -> t -> AbsFun n t
 mk_lifted_fun ps n ts t = Fun (evalList ps) n Lifted (evalList ts) t InfiniteWD
 
 mkConstant :: (Pre,IsName n) 
