@@ -25,6 +25,7 @@ import Control.Lens hiding (lifted,Context,Const)
 import Control.Monad
 import Control.Precondition
 
+import Data.Char
 import Data.Default
 import Data.Hashable
 import Data.List as L hiding (union)
@@ -696,11 +697,14 @@ result28 = ()
 
 case29 :: IO String
 case29 = return 
+        $ L.map (replaceDigit '*')
         $ unlines . L.map (uncurry $ \x y -> x ++ "\n" ++ y)
         $ scopeCorrect' 
             (getExpr $ c [expr|\qforall{x}{}{x \le y + z} |]) 
             (def & vars .~ symbol_table [Var y int])
     where
+        replaceDigit x c | isDigit c = x    
+                         | otherwise = c
         c = ctx $ do
                 decls %= M.union (symbol_table 
                         [ Var z int
@@ -714,8 +718,8 @@ result29 :: String
 result29 = unlines
     [ ""
     , ""
-    , "./Logic/Test.hs:703:11 - scopeCorrect'"
-    , "./Logic/Expr/Expr.hs:645:9 - areVisible"
+    , "./Logic/Test.hs:***:** - scopeCorrect'"
+    , "./Logic/Expr/Expr.hs:***:* - areVisible"
     , ""
     , " free vars = [y,z]"
     , " declared  = [y]"
