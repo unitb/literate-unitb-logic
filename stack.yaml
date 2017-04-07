@@ -10,8 +10,8 @@
 #'
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-6.4
-compiler: ghc-7.10.3
+resolver: lts-7.12
+compiler: ghc-8.0.1
 
 ghc-options:
     # All packages
@@ -26,49 +26,49 @@ packages:
 - '.'
 - location:
     git: https://github.com/unitb/syntax-error.git
-    commit: 764f224e42816961ae5742996d7c8eedcd145fde
+    commit: 4afedb21cdce20c6cff8cb6b4f8375a99a080ec9
 - location:
     git: https://github.com/unitb/literate-unitb-config.git
-    commit: 118b906d59cf7586782d292baff5ae65988d0b63
+    commit: b100889b5b3989b9693c4628ed942a44acd1a9c1
 - location:
     git: https://github.com/unitb/literate-unitb-utils.git
-    commit: 9e62be5a42bc11ecc89bd40284bb73fc2a8407fe
+    commit: 9cd82bfeba329ec559385265ab7b4396754e5b71
 - location:
     git: https://github.com/unitb/literate-unitb-latex.git
-    commit: 78529049b88999df3eb76340db166d9892d46bfd
+    commit: f8fa4441021b5e28eea1aa04de36f0e47b8267cc
 - location:
     git: https://github.com/unitb/partial-order.git
-    commit: 0f1629aa99c0a74bccd4e98e63960361175d16c6
+    commit: 456ce13eb0d8766b7c41f5e8d279c9d85398e8c9
 - location:
     git: https://github.com/unitb/unitb-testing.git
-    commit: 9d3036afb6adf9ee00435fc6fa98e6a3cc604241
+    commit: 58a63a4e1f64ae19dc3323dec3823239563e3581
 - location:
     git: https://github.com/unitb/transformer-lenses.git
-    commit: 405f81025293b9f9cd25145644ca86fe88a69388
+    commit: 899637f5a57a6909ed0f238e04388521a5f07c04
 - location:
     git: https://github.com/unitb/string-lenses.git
-    commit: 0d616b2f754391ba62581348464f45bcb8561019
+    commit: 28c86ee6c5c1ccbd4f001721e8636d3301ab52d4
 - location:
     git: https://github.com/unitb/show-with.git
-    commit: 6be72dbe945cae0945dd18a835f56c7a807937a7
+    commit: 864e83e05b18541a707d5a55e526d6e2e5aa0a34
 - location:
     git: https://github.com/unitb/classy-lens-hierarchy.git
-    commit: a82197c81f2f8cdb4ecce54495ca62a6c10ad3d1
+    commit: c4f98d500973d9e04f78f398b6c866674019f784
 - location:
     git: https://github.com/unitb/generic-instances.git
-    commit: 5e9b4de0f6549933f570f7f2bab16654299c7b0d
+    commit: 342e88e34ff238ee432d1ef783ff6275b7d8934d
 - location:
     git: https://github.com/unitb/lens-extra.git
-    commit: 2a54572aa21db03adb8c161e5755892803a1808b
+    commit: bb7ff20059db94e2174925f848121dcbd4d50c76
 - location:
     git: https://github.com/unitb/bipartite-graph.git
-    commit: 0e430c7a0571b31d980bf4141197ec6c19b964b6
+    commit: b76f97da93ef96a52f743f5ca8578e51092c69c8
 - location:
     git: https://github.com/unitb/pretty-printable.git
-    commit: 85485a415d2098bb1a7ed8dc1ca412221a09720b
+    commit: e43804c59100430feedec572d392668762dd6806
 - location:
     git: https://github.com/unitb/data-packaged.git
-    commit: cfd83405a7573cfa458cb2b25f79565e14316e70
+    commit: 7e4d427b271573a3fa64625816eeb950c85d171b
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps: 
 - assert-0.0.1.2
