@@ -44,6 +44,7 @@ data Lifting = Unlifted | Lifted
     deriving (Eq,Ord, Generic, Data, Typeable,Show)
 
 makeLenses ''AbsFun
+makeFields ''AbsFun
 
 instance Serialize Lifting where
 
