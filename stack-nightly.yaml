@@ -32,16 +32,16 @@ packages:
     commit: b100889b5b3989b9693c4628ed942a44acd1a9c1
 - location:
     git: https://github.com/unitb/literate-unitb-utils.git
-    commit: 9cd82bfeba329ec559385265ab7b4396754e5b71
+    commit: 21c31401a9488fcaa24df8f761964b884414507f
 - location:
     git: https://github.com/unitb/literate-unitb-latex.git
-    commit: f8fa4441021b5e28eea1aa04de36f0e47b8267cc
+    commit: 37fd99eed037129cd96c2e0dc9b51e15a0cefc87
 - location:
     git: https://github.com/unitb/partial-order.git
     commit: 456ce13eb0d8766b7c41f5e8d279c9d85398e8c9
 - location:
     git: https://github.com/unitb/unitb-testing.git
-    commit: 58a63a4e1f64ae19dc3323dec3823239563e3581
+    commit: 338d3125ca2bb96679ac34ba0f73da0bcb90c245
 - location:
     git: https://github.com/unitb/transformer-lenses.git
     commit: 899637f5a57a6909ed0f238e04388521a5f07c04
