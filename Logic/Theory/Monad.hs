@@ -8,7 +8,6 @@ module Logic.Theory.Monad where
 
     -- Modules
 import Logic.Expr
-import Logic.Expr.Genericity (variables)
 import Logic.Operator
 import Logic.Proof hiding (preserve) 
 import qualified Logic.Proof as P
@@ -249,7 +248,7 @@ sort_def n f = do
     return r    
 
 param_to_var :: Expr -> Expr
-param_to_var e = evalState (param_to_varE e) (0,variables e,M.empty)
+param_to_var e = evalState (param_to_varE e) (0,variablesSet e,M.empty)
 
 type RewriteST = State (Int,S.Set InternalName,Map InternalName InternalName)
 

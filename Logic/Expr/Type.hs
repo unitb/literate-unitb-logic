@@ -68,16 +68,31 @@ makePrisms ''FOType
 makePrisms ''GenericType
 makePrisms ''Sort
 
+newtype SubType = SubType { unSubType :: GenericType } 
+    deriving (Eq,Ord,Typeable,Generic,Data,Show,PrettyPrintable,Hashable)
+
+instance Rewrapped SubType SubType where
+instance Wrapped SubType where
+    type Unwrapped SubType = GenericType
+    _Wrapped' = iso unSubType SubType
+
 referenced_types :: FOType -> S.Set FOType
 referenced_types t@(FOT _ ts) = S.insert t $ S.unions $ map referenced_types ts
 
 class TypeOf a ~ TypeOf (TypeOf a) => Typed a where
     type TypeOf a :: *
     type_of :: a -> TypeOf a
+    types :: Traversal' a (TypeOf a)
 
 instance Typed GenericType where
     type TypeOf GenericType = GenericType
     type_of = id
+    types _ = pure
+
+instance Typed SubType where
+    type TypeOf SubType = SubType
+    type_of = id
+    types _ = pure
 
 class (Ord a, Tree a, PrettyPrintable a, Show a
         , TypeAnnotationPair a a
@@ -87,25 +102,49 @@ class (Ord a, Tree a, PrettyPrintable a, Show a
     make_type :: Sort -> [a] -> a
     _FromSort :: Prism' a (Sort,[a])
 
+class TypeSystem t => IsPolymorphic t where
+    genericType' :: Iso' t GenericType
+
+genericType :: (IsPolymorphic a,IsPolymorphic b) 
+            => Iso a b GenericType GenericType
+genericType = 
+         withIso genericType' $ \f _ -> 
+         withIso genericType' $ \_ g -> 
+            iso f g
+
+instance IsPolymorphic GenericType where
+    genericType' = id
+instance IsPolymorphic SubType where
+    genericType' = _Wrapped
+
 class TypeAnnotationPair a b where
     strippedType :: b -> a
 
 instance TypeAnnotationPair () t where
     strippedType _ = ()
 
+instance TypeAnnotationPair SubType SubType where
+    strippedType = id
+    
 instance TypeAnnotationPair GenericType GenericType where
     strippedType = id
 
 instance TypeAnnotationPair FOType FOType where
     strippedType = id
 
+instance TypeSystem SubType where
+    make_type ss = SubType . make_type ss . map unSubType
+    _FromSort f = dimap unSubType (fmap SubType) $ _FromSort $ dimap 
+            (_2.traverse %~ SubType) 
+            (mapped._2.traverse %~ unSubType) f
 instance TypeSystem GenericType where
-    make_type ss  = Gen ss . evalList
+    make_type ss = Gen ss . evalList
     _FromSort    = _Gen . mapping (iso id evalList)
 
 instance Typed FOType where
     type TypeOf FOType = FOType
     type_of = id
+    types _ = pure
 
 instance TypeSystem FOType where
     make_type ss = FOT ss . evalList
@@ -124,28 +163,34 @@ instance Hashable Field where
 instance Typed () where
     type TypeOf () = ()
     type_of = id
+    types _ = pure
 
 instance TypeSystem () where
     make_type _ _ = ()
     _FromSort = prism' (const ()) (const Nothing)
 
+instance Plated SubType where
+instance Tree SubType where
+    as_tree' = as_tree' . unSubType
+    -- {-# INLINABLE rewriteM #-}
+    -- rewriteM = _Wrapped'.rewriteM._Unwrapped'
+instance Plated GenericType where
+    {-# INLINABLE plate #-}
+    plate f (Gen ss ts) = do
+            Gen ss <$> traverse f ts
+    plate _ x@(VARIABLE _) = pure x
+    plate _ x@(GENERIC _)  = pure x
 instance Tree GenericType where
     as_tree' (Gen ss ts) = cons_to_tree ss ts
     as_tree' (GENERIC x)   = return $ Str $ render x
     as_tree' (VARIABLE n)  = return $ Str $ "_" ++ render n
-    {-# INLINABLE rewriteM #-}
-    rewriteM f (Gen ss ts) = do
-            Gen ss <$> traverse f ts
-    rewriteM _ x@(VARIABLE _) = pure x
-    rewriteM _ x@(GENERIC _)  = pure x
 
 instance Plated FOType where
-    plate = rewriteM
+    {-# INLINABLE plate #-}
+    plate f (FOT ss ts) = FOT ss <$> traverse f ts
 
 instance Tree FOType where
     as_tree' (FOT ss ts) = cons_to_tree ss ts
-    {-# INLINABLE rewriteM #-}
-    rewriteM f (FOT ss ts) = FOT ss <$> traverse f ts
 
 instance Lift GenericType where
     lift = genericLift
@@ -329,14 +374,14 @@ instance Arbitrary Sort where
         ]
     shrink = genericShrink
 
-gA :: GenericType
-gA = GENERIC [smt|a|]
+gA :: IsPolymorphic t => t
+gA = GENERIC [smt|a|]^.from genericType'
 
-gB :: GenericType
-gB = GENERIC [smt|b|]
+gB :: IsPolymorphic t => t
+gB = GENERIC [smt|b|]^.from genericType'
 
-gC :: GenericType
-gC = GENERIC [smt|c|]
+gC :: IsPolymorphic t => t
+gC = GENERIC [smt|c|]^.from genericType'
 
 z3Sort :: Pre 
        => String -> String -> Int -> Sort

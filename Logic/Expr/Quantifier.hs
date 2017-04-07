@@ -15,7 +15,7 @@ import Data.Data
 import Data.Hashable
 import Data.Serialize
 
-import GHC.Generics
+import GHC.Generics hiding (from)
 import GHC.Generics.Instances
 
 import Language.Haskell.TH.Syntax hiding (Name,Type)
@@ -37,8 +37,8 @@ data FOQuantifier = FOForall | FOExists
 
 class (Ord q, PrettyPrintable q, Show q, Data q, Hashable q) => IsQuantifier q where
     merge_range :: q -> StrList
-    termType :: q -> Type
-    exprType :: q -> Type -> Type -> Type
+    termType :: IsPolymorphic t => q -> t
+    exprType :: IsPolymorphic t => q -> t -> t -> t
     qForall :: q
     qExists :: q    
 
@@ -48,10 +48,10 @@ instance IsQuantifier HOQuantifier where
     merge_range (UDQuant _ _ _ _) = Str "PRE"
     termType Forall = bool
     termType Exists = bool
-    termType (UDQuant _ t _ _) = t
+    termType (UDQuant _ t _ _) = t^.from genericType
     exprType Forall _ _ = bool
     exprType Exists _ _ = bool
-    exprType (UDQuant _ _ (QTConst t) _) _ _ = t
+    exprType (UDQuant _ _ (QTConst t) _) _ _ = t^.from genericType
     exprType (UDQuant _ _ (QTSort s) _) arg term = make_type s [arg,term]
     exprType (UDQuant _ _ (QTFromTerm s) _) _ term = make_type s [term]
     exprType (UDQuant _ _ QTTerm _) _ term = term

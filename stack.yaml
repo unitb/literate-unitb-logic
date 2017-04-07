@@ -11,7 +11,6 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 resolver: lts-6.4
-compiler: ghc-7.10.3
 
 ghc-options:
     # All packages
@@ -39,9 +38,10 @@ packages:
 - location:
     git: https://github.com/unitb/partial-order.git
     commit: 0f1629aa99c0a74bccd4e98e63960361175d16c6
-- location:
-    git: https://github.com/unitb/unitb-testing.git
-    commit: 9d3036afb6adf9ee00435fc6fa98e6a3cc604241
+- ../unitb-testing
+# - location:
+#     git: https://github.com/unitb/unitb-testing.git
+#     commit: 9d3036afb6adf9ee00435fc6fa98e6a3cc604241
 - location:
     git: https://github.com/unitb/transformer-lenses.git
     commit: 405f81025293b9f9cd25145644ca86fe88a69388
@@ -63,9 +63,9 @@ packages:
 - location:
     git: https://github.com/unitb/bipartite-graph.git
     commit: 0e430c7a0571b31d980bf4141197ec6c19b964b6
-- location:
-    git: https://github.com/unitb/pretty-printable.git
-    commit: 85485a415d2098bb1a7ed8dc1ca412221a09720b
+- ../pretty-printable
+    # git: https://github.com/unitb/pretty-printable.git
+    # commit: 85485a415d2098bb1a7ed8dc1ca412221a09720b
 - location:
     git: https://github.com/unitb/data-packaged.git
     commit: cfd83405a7573cfa458cb2b25f79565e14316e70

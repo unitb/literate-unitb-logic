@@ -179,7 +179,15 @@ zexists vs x w
       && w `elem` [ztrue, zfalse] = zand x w
     | otherwise                   = Binder qExists vs x w bool
 
-zquantifier :: HOQuantifier -> [Var] -> ExprP -> ExprP -> ExprP
+zquantifier :: (IsQuantifier q
+               ,TypeSystem2 t
+               ,IsName n
+               ,IsPolymorphic t) 
+            => q 
+            -> [AbsVar n t] 
+            -> ExprPG n t q 
+            -> ExprPG n t q 
+            -> ExprPG n t q
 zquantifier q vs r t = do
     r' <- zcast bool r
     t' <- zcast (termType q) t
@@ -494,8 +502,8 @@ elem_fun t = mk_fun' [t] "elem" [t,set_type t] bool
 zIsDef :: ExprP -> ExprP
 zIsDef = typ_fun1 isDef_fun
 
-zelem         :: (IsQuantifier q,IsName n) 
-              => ExprPG n Type q -> ExprPG n Type q -> ExprPG n Type q
+zelem         :: (IsQuantifier q,IsName n,TypeSystem2 t,IsPolymorphic t) 
+              => ExprPG n t q -> ExprPG n t q -> ExprPG n t q
 zelem        = typ_fun2 (elem_fun gA)
 
 zelem'        :: UntypedExpr -> UntypedExpr -> UntypedExpr
@@ -512,11 +520,11 @@ zelemUnchecked x s = provided (set_type (type_of x) == type_of s) $
 zident :: ExprP
 zident = Right $ funApp ident_fun []
 
-zrecord' :: (TypeSystem t,IsName n,IsQuantifier q) 
+zrecord' :: (TypeSystem t) 
          => MapSyntax Field (ExprPG n t q) () 
          -> ExprPG n t q
 zrecord' = zrecord . runMap'
-zrecord :: (TypeSystem t,IsName n,IsQuantifier q)
+zrecord :: (TypeSystem t)
         => M.Map Field (ExprPG n t q) 
         -> ExprPG n t q
 zrecord m = do

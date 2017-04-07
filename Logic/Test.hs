@@ -4,13 +4,14 @@ module Logic.Test where
 
     -- Modules
 import Logic.Expr hiding (field)
-import Logic.Expr.Const
+import qualified Logic.Expr.Const as C
 import Logic.Expr.Parser
 import Logic.Expr.Prism
 import Logic.Expr.Scope
+import Logic.Expr.Type (Typed(..))
 import Logic.Proof
 import Logic.Proof.Monad hiding (vars)
-import Logic.QuasiQuote hiding (var)
+import Logic.QuasiQuote 
 import Logic.Test.Stable
 import Logic.Theory
 import Logic.Theories
@@ -113,7 +114,7 @@ mapping_acyclic :: (Type,Type) -> Maybe (Type,Type)
 mapping_acyclic (t0,t1) =
         maybe (Just (t0,t1)) (const Nothing) (do
             un <- unify t0 t1
-            return $ S.null (keysSet un `S.intersection` S.unions (map generics $ elems un)))
+            return $ S.null (keysSet un `S.intersection` S.unions (map genericsSet $ elems un)))
 
 prop_type_mapping_acyclic :: (Type, Type) -> Property
 prop_type_mapping_acyclic (t0,t1) = 
@@ -247,6 +248,7 @@ test = test_cases "genericity"
         , stringCase "QuasiQuotes for function application" case30 result30
         , stringCase "Pattern matching on function application" case31 result31
         , aCase "parsing expressions encoded in arrays" case32 result32
+        , aCase "basic subtyping: int <: real" case33 result33
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -320,7 +322,7 @@ result7 :: ExprP
         )
     where
         train = Gen (z3Sort "\\train" "train" 0) []
-        (x,_) = var "x" train
+        (x,_) = C.var "x" train
         empty_set_of_train = funApp (mk_fun' [train] "empty-set" [] $ set_type train) []
 
 result8 :: String
@@ -339,11 +341,11 @@ result8 = unlines
 case8 :: IO String
 case8 = return $ unlines $ map pretty_print' $ disjuncts e'
     where
-        (z,z_decl) = var "z" int
+        (z,z_decl) = C.var "z" int
         z7  = mzint 7
         z87 = mzint 87
-        (p,_) = var "p" bool
-        (q,_) = var "q" bool
+        (p,_) = C.var "p" bool
+        (q,_) = C.var "q" bool
         e0 :: ExprP
         e0 = mzexists [z_decl] mztrue $ 
                             (p `mzor` (mzeq z z7)) 
@@ -359,8 +361,8 @@ case9 = $(quickCheckClassesWith [''PreOrd,''PartialOrd])
 
 instance IsQuantifier Integer where
     merge_range = Str . show
-    termType n = unGen arbitrary (mkQCGen $ fromInteger n) (fromInteger n)
-    exprType n r t = unGen (oneof [arbitrary,return r,return t]) 
+    termType n = unGen (view (from genericType) <$> arbitrary) (mkQCGen $ fromInteger n) (fromInteger n)
+    exprType n r t = unGen (oneof [view (from genericType) <$> arbitrary,return r,return t]) 
                 (mkQCGen $ fromInteger n) (fromInteger n)
     qForall  = 1
     qExists  = 2
@@ -375,6 +377,8 @@ instance TypeSystem Integer where
 instance Typed Integer where
     type TypeOf Integer = Integer
     type_of = id
+    types = id
+    -- types = _
 
 case10 :: IO String
 case10 = return $ z3_code $ _goal $ runSequent' $ do
@@ -764,3 +768,13 @@ case32 = return $ getExpr $ c [expr|
 result32 :: Expr
 result32 = fromRight' $ mzint 3 .+ mzint 7
 
+case33 :: IO Expr
+case33 = return $ getExpr $ c [expr| p.x |]
+    where
+        c = ctxWith [function_theory] $ do
+            [var| p : \Real \pfun \Real |]
+            [var| x : \Int |]
+            expected_type .= Nothing
+
+result33 :: Expr
+result33 = ztrue

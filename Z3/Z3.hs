@@ -141,7 +141,7 @@ instance Tree Z3Command where
 --        where
 --            strat t = List [Str "try-for", Str "200", List [Str "then", t, Str "sat"] ]
     as_tree GetModel      = Expr.List [Str "get-model"]
-    rewriteM _ = pure
+    -- rewriteM _ = pure
 
 z3_pattern :: S.Set FOVar -> FOExpr -> [FOExpr]
 z3_pattern vs e = runReader (head e) False

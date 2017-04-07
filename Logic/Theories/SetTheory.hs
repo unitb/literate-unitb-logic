@@ -208,7 +208,11 @@ comprehension = UDQuant comprehension_fun gA (QTFromTerm set_sort) InfiniteWD
 comprehension_fun :: IsName n => AbsFun n Type
 comprehension_fun = mk_fun' [gA,gB] "set" [set_type gA, array gA gB] $ set_type gB
 
-zcomprehension :: [Var] -> ExprP -> ExprP -> ExprP
+zcomprehension :: (IsName n,IsPolymorphic t,TypeSystem2 t)
+               => [AbsVar n t] 
+               -> ExprPG n t HOQuantifier
+               -> ExprPG n t HOQuantifier
+               -> ExprPG n t HOQuantifier
 zcomprehension = zquantifier comprehension
 
 zcomprehension' :: [UntypedVar] -> UntypedExpr -> UntypedExpr -> UntypedExpr
@@ -222,13 +226,16 @@ mk_zrecord_set = zrecord_set . runMap'
 --              -> ExprP
 -- zrecord_set' = zrecord_set . runMap'
 
-zrecord_set :: Map Field ExprP
-            -> ExprP
+getElements :: (IsName n,IsQuantifier q,TypeSystem t) => ExprPG n t q -> Either [String] t
+getElements e = e >>= \e -> maybe (Left [msg e]) Right $ type_of e^?_ElementType
+  where
+    msg e = [s|Expecting a set type for: %s\n  of type: %s|] 
+                (pretty e) (pretty $ type_of e)
+
+zrecord_set :: (TypeSystem2 t,IsName n,IsPolymorphic t)
+            => Map Field (ExprPG n t HOQuantifier)
+            -> ExprPG n t HOQuantifier
 zrecord_set m = do
-        let msg e = [s|Expecting a set type for: %s\n  of type: %s|] 
-                      (pretty e) (pretty $ type_of e)
-            getElements :: ExprP -> Either [String] Type
-            getElements e = e >>= \e -> maybe (Left [msg e]) Right $ type_of e^?_ElementType
         (r,r_decl) <- var "r" . recordTypeOfFields <$> traverseValidation getElements m
         let range = mzall $ mapWithKey (\field e -> zfield r field `zelem` e) m
         zcomprehension [r_decl] range r

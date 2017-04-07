@@ -59,7 +59,11 @@ type RawExpr = AbsExpr InternalName Type HOQuantifier
 
 type Expr' = AbsExpr InternalName Type FOQuantifier
 
-type UntypedExpr = GenExpr Name () GenericType HOQuantifier
+type ExprSub = AbsExpr Name SubType HOQuantifier
+
+type UntypedExpr = UntypedExpr' GenericType
+
+type UntypedExpr' t = GenExpr Name () t HOQuantifier
 
 data CastType = Parse | CodeGen | WDGuarded
     deriving (Eq,Ord,Typeable,Data,Generic,Show,Enum,Bounded)
@@ -109,7 +113,7 @@ instance (Arbitrary t,Arbitrary n,Arbitrary a,Arbitrary q,TypeSystem t,IsQuantif
             ]
     shrink = genericShrink
 
-mkRecord :: (TypeSystem t,TypeSystem a,IsName n,IsQuantifier q,TypeAnnotationPair t a) 
+mkRecord :: (TypeSystem t,TypeSystem a,TypeAnnotationPair t a) 
          => RecordExpr (GenExpr n t a q) -> Maybe (GenExpr n t a q)
 mkRecord (RecLit m) = Just $ Record (RecLit m) (record_type $ type_of <$> m)
 mkRecord r@(RecUpdate e m) = Record r . record_type . (M.map type_of m `M.union`) <$> (type_of e^?fieldTypes) 
@@ -318,11 +322,11 @@ var_type :: AbsVar n t -> t
 var_type (Var _ t) = t
 
 
-instance ( IsName n,TypeSystem t,TypeSystem a
-         , TypeAnnotationPair t a,IsQuantifier q) 
+instance ( TypeSystem t,TypeSystem a
+         , TypeAnnotationPair t a ) 
         => Typed (GenExpr n t a q) where
     type TypeOf (GenExpr n t a q) = t
-    type_of e = type_of $ aux $ asExpr e
+    type_of e = type_of $ aux e
         where
             aux (Word (Var _ t))       = t
             aux (Lit _ t)              = t
@@ -331,10 +335,11 @@ instance ( IsName n,TypeSystem t,TypeSystem a
             aux (Record _ t)           = t
             aux (FunApp (Fun _ _ _ _ t _) _) = strippedType t
             aux (Binder _ _ _ _ t)   = t
+    types = typesOf
 
-typeOfRecord :: ( TypeSystem t, TypeSystem a
+typeOfRecord :: ( TypeSystem a,TypeSystem t
                 , TypeAnnotationPair t a
-                , IsName n,IsQuantifier q,Pre)
+                , Pre)
              => RecordExpr (GenExpr n t a q) -> t
 typeOfRecord (RecLit m) = recordTypeOfFields m
 typeOfRecord (RecSet m) = record_type $ type_of <$> m
@@ -407,7 +412,9 @@ instance HasNames (GenExpr n t a q) n where
     type SetNameT n' (GenExpr n t a q) = GenExpr n' t a q
     namesOf = traverse3
 
-instance (Data n,IsName n,Data t,Data q,TypeSystem t, IsQuantifier q) => Tree (AbsDef n t q) where
+instance (TypeSystem t) => Plated (AbsDef n t q) where
+    plate _ = pure
+instance (IsName n,TypeSystem t, IsQuantifier q) => Tree (AbsDef n t q) where
     as_tree' d@(Def _ _ argT rT e) = Expr.List <$> sequenceA
             [ Str  <$> render_decorated d
             , Expr.List <$> mapM as_tree' argT 
@@ -462,9 +469,9 @@ z3Def :: Pre
       -> Def
 z3Def ts n = makeDef ts (z3Name n)
 
-lookupFields :: ( IsName n,TypeSystem t,TypeSystem a
+lookupFields :: ( TypeSystem t,TypeSystem a
                 , Pre
-                , TypeAnnotationPair t a,IsQuantifier q) 
+                , TypeAnnotationPair t a) 
              => GenExpr n t a q -> M.Map Field (GenExpr n t a q)
 lookupFields e = fromJust' $ type_of e^?fieldTypes >>= fieldLookupMap
     where
@@ -545,13 +552,16 @@ instance (TypeSystem a, TypeSystem t
                           , r'
                           , xp' ] ]
     -- {-# INLINE rewriteM #-}
-    rewriteM _ x@(Word _)           = pure x
-    rewriteM _ x@(Lit _ _)        = pure x
-    rewriteM f (Record e t)       = Record <$> traverseRecExpr f e <*> pure t
-    rewriteM f (Lift e t)    = Lift <$> f e <*> pure t
-    rewriteM f (Cast b e t)  = Cast b <$> f e <*> pure t
-    rewriteM f (FunApp g xs) = funApp g <$> traverse f xs
-    rewriteM f (Binder q xs r x t)  = binder q xs <$> f r <*> f x <*> pure t
+
+instance (TypeSystem a, TypeSystem t)
+        => Plated (GenExpr n t a q) where
+    plate _ x@(Word _)           = pure x
+    plate _ x@(Lit _ _)        = pure x
+    plate f (Record e t)       = Record <$> traverseRecExpr f e <*> pure t
+    plate f (Lift e t)    = Lift <$> f e <*> pure t
+    plate f (Cast b e t)  = Cast b <$> f e <*> pure t
+    plate f (FunApp g xs) = funApp g <$> traverse f xs
+    plate f (Binder q xs r x t)  = binder q xs <$> f r <*> f x <*> pure t
 
 rewriteExpr :: (t0 -> t1)
             -> (q0 -> q1)
@@ -618,6 +628,9 @@ instance (TypeSystem t, IsQuantifier q, IsName n) => PrettyPrintable (AbsDef n t
 instance TypeSystem t => Typed (AbsDef n t q) where
     type TypeOf (AbsDef n t q) = t
     type_of (Def _ _ _ t _) = t
+    types f (Def ps n ts t e) = Def ps n <$> (traverse.types) f ts 
+                                         <*> types f t 
+                                         <*> types f e
 
 dataConstrs :: Sort -> M.Map Name Fun
 dataConstrs (Sort _ _ _) = M.empty

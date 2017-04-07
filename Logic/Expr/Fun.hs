@@ -90,6 +90,9 @@ instance (PrettyPrintable n,PrettyPrintable t,Tree t) => PrettyPrintable (AbsFun
 instance (TypeSystem t) => Typed (AbsFun n t) where
     type TypeOf (AbsFun n t)  = t
     type_of (Fun _ _ _ _ t _) = t
+    types f (Fun ps n l ts t w) = Fun ps n l <$> (traverse.types) f ts
+                                             <*> types f t
+                                             <*> pure w
 
 instance HasName (AbsFun n t) n where
     name = to $ \(Fun _ x _ _ _ _) -> x
@@ -133,7 +136,10 @@ type FOFun = AbsFun InternalName FOType
 
 type InternalFun = AbsFun InternalName Type
 
-instance (Data n,Data t,IsName n,TypeSystem t) => Tree (AbsFun n t) where
+instance Plated (AbsFun n t) where
+    plate _ = pure
+
+instance (IsName n,TypeSystem t) => Tree (AbsFun n t) where
     as_tree' f@(Fun _ _ _ argT rT _) = Expr.List <$> sequenceA
             [ Str  <$> render_decorated f
             , Expr.List <$> mapM as_tree' argT 

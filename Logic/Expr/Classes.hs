@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies,GADTs,CPP #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Logic.Expr.Classes where
 
 import Logic.Names
@@ -8,11 +9,11 @@ import Control.Lens hiding (List,rewriteM,rewrite,children)
 #else
 import Control.Lens hiding (rewriteM,rewrite,children)
 #endif
+-- import Control.Lens.Plated
 import Control.Monad.Reader
 import Control.Monad.State
 
 import Data.Data
-import Data.Data.Lens 
 import Data.DList as D
 import Data.DList.Utils as D
 import Data.Foldable as F
@@ -20,7 +21,7 @@ import Data.List as L hiding (intercalate)
 import Data.Map  as M
 import Data.Monoid
 import Data.Tuple
-import Data.Typeable.Lens
+-- import Data.Typeable.Lens
 
 import Text.Pretty
 
@@ -84,23 +85,28 @@ class Tree a where
     as_tree   :: a -> StrList
     as_tree'  :: a -> Reader (OutputMode n) StrList
     as_tree x = runReader (as_tree' x) ProverOutput
-    rewriteM :: (Applicative m) => (a -> m a) -> a -> m a
-    default rewriteM :: (Applicative m, Data a) => (a -> m a) -> a -> m a
-    rewriteM f t = gtraverse (_cast f) t
+
+    -- default rewriteM :: (Applicative m, Data a) => (a -> m a) -> a -> m a
+rewriteM :: (Plated a,Applicative m) => (a -> m a) -> a -> m a
+rewriteM = plate
 
 {-# INLINE rewrite' #-}
-rewrite'  :: Tree a => (b -> a -> (b,a)) -> b -> a -> (b,a)
+rewrite'  :: Plated a => (b -> a -> (b,a)) -> b -> a -> (b,a)
 rewrite' f x t = (rewriteM' g x t) ()
     where
         g x t () = f x t
 
 {-# INLINE rewriteM' #-}
-rewriteM' :: (Monad m, Tree a) => (b -> a -> m (b,a)) -> b -> a -> m (b,a)
+rewriteM' :: (Monad m, Plated a) => (b -> a -> m (b,a)) -> b -> a -> m (b,a)
 rewriteM' f x t = swap <$> runStateT (rewriteM (StateT . fmap (fmap swap) . flip f) t) x
+
+
+instance Plated () where
+    plate _ = pure
 
 instance Tree () where
     as_tree' () = return $ List []
-    rewriteM f = f
+    -- rewriteM f = f
 
 data StrList = List [StrList] | Str String
 
@@ -128,24 +134,24 @@ fold_map f s0 (x:xs) = (s2,y:ys)
         (s1,y)  = f s0 x
         (s2,ys) = fold_map f s1 xs
 
-visit :: Tree a => (b -> a -> b) -> b -> a -> b
+visit :: Plated a => (b -> a -> b) -> b -> a -> b
 visit f s x = fst $ rewrite' g s x
     where
         g s0 y = (f s0 y, y)
 
-rewrite :: Tree a => (a -> a) -> a -> a
+rewrite :: Plated a => (a -> a) -> a -> a
 rewrite f x = snd $ rewrite' g () x
     where
         g () x = ((), f x)
 
-visitM :: (Monad m, Tree a) => (b -> a -> m b) -> b -> a -> m b
+visitM :: (Monad m, Plated a) => (b -> a -> m b) -> b -> a -> m b
 visitM f x t = visit g (return x) t
     where
         g x t = do
             y <- x
             f y t
 
-children :: Tree a => Traversal' a a
+children :: Plated a => Traversal' a a
 children = rewriteM
 
 class FromList a b where

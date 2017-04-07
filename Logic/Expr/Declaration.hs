@@ -65,6 +65,9 @@ instance (TypeSystem t,Typeable q) => Named (AbsDecl t q) where
     decorated_name' (ConstDecl n _)     = adaptName n
     decorated_name' (SortDecl s) = decorated_name' s
 
+instance Plated (AbsDecl t q) where
+    plate _ = pure
+
 instance (TypeSystem t, IsQuantifier q) => Tree (AbsDecl t q) where
     as_tree' d@(FunDecl _ _ dom ran) = do
             argt <- mapM as_tree' dom
@@ -123,7 +126,7 @@ instance (TypeSystem t, IsQuantifier q) => Tree (AbsDecl t q) where
             g (n,t)     = do
                 t' <- as_tree' t
                 return $ Expr.List [Str n, t']
-    rewriteM _ = pure
+    -- rewriteM _ = pure
 
 instance (IsQuantifier t,TypeSystem n) 
         => PrettyPrintable (AbsDecl n t) where

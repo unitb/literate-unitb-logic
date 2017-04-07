@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Logic.Expr.TypeChecking where
 
     -- Modules
@@ -59,12 +60,18 @@ parCheck mx my = Left $ errors mx ++ errors my
         errors (Left xs) = xs
         errors (Right _) = []
 
-newContext :: [UntypedVar] -> Context -> Context
+newContext :: IsPolymorphic t
+           => [UntypedVar] 
+           -> AbsContext t q 
+           -> AbsContext t q
 newContext us c@(Context ss vs fs ds dums) = Context ss (M.union vs' vs) fs ds dums
     where
         vs' = newDummies us c
 
-newDummies :: [UntypedVar] -> Context -> M.Map Name Var
+newDummies :: IsPolymorphic t
+           => [UntypedVar] 
+           -> AbsContext t q 
+           -> M.Map Name (AbsVar Name t)
 newDummies us (Context _ _ _ _ dums) = vs'
         -- Context ss vs' fs ds dums
     where
@@ -77,22 +84,28 @@ tryBoth :: Either a b -> Either a b -> Either a b
 tryBoth x@(Right _) _ = x
 tryBoth (Left _) x    = x
 
-checkTypes :: Maybe GenericType
-           -> Context
-           -> UntypedExpr
+type TypedExpr t = AbsExpr Name t HOQuantifier
+
+checkTypes :: forall t. (TypeSystem2 t,Generic t t,IsPolymorphic t)
+           => Maybe t
+           -> AbsContext t HOQuantifier
+           -> UntypedExpr' t
            -> StringLi
-           -> Either [Error] Expr
+           -> Either [Error] (TypedExpr t)
 checkTypes expected_t c ue xs = do
     e <- (checkTypes' c ue) & _Left.traverse %~ strToErr
                             & _Right %~ normalize_generics
     case expected_t of
-        Just t  -> mapLeft (\xs' -> map (`Error` li) xs') $ zcast t (Right e)
+        Just t  -> mapLeft (map strToErr) $ zcast t (Right e)
         Nothing -> return e
     where
         li = line_info xs
-        strToErr = \msg -> Error msg li
+        strToErr msg = Error msg li
 
-checkTypes' :: Context -> UntypedExpr -> Either [String] Expr
+checkTypes' :: (TypeSystem2 t,IsPolymorphic t,Generic t t)
+            => AbsContext t HOQuantifier
+            -> UntypedExpr' t 
+            -> Either [String] (TypedExpr t)
 checkTypes' c e = do
         e' <- checkTypes'' c e
         case type_of e'^?_Params guarded_sort of
@@ -100,7 +113,10 @@ checkTypes' c e = do
             Just _  -> undefined'
             Nothing -> return e'
 
-checkTypes'' :: Context -> UntypedExpr -> Either [String] Expr
+checkTypes'' :: forall t. (TypeSystem2 t,IsPolymorphic t,Generic t t)
+             => AbsContext t HOQuantifier
+             -> UntypedExpr' t 
+             -> Either [String] (TypedExpr t)
 checkTypes'' c (Word (Var n ())) = do
     v <- bind (n `M.lookup` (c^.constants))
         ([s|%s is undeclared|] $ pretty n)
@@ -158,6 +174,7 @@ checkTypes'' c' (Binder q vs' r t _) = do
         (zcast bool $ checkTypes' c r) 
         (zcast (termType q) $ checkTypes' c t)
     let vars = used_var r'' `S.union` used_var t''
+        v_type :: [(AbsVar Name t, S.Set (AbsVar Name t))]
         v_type = id -- L.filter ((1 <) . S.size . snd) 
                     $ zip vs
                     $ map f ns 

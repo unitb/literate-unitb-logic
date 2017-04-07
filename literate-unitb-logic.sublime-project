@@ -15,24 +15,25 @@
                 "$project_path",
                 "ghc_errors.txt"
             ],
-            "file_regex": "^([^\\s=:\\(\\)][^\\n:\\(\\)]+?hs):([0-9]*):?([0-9]*)",
+            "file_regex": "^ {0,4}([^\\s=:\\(\\)][^\\n:\\(\\)]+?hs):([0-9]*):?([0-9]*)",
             "name": "Haskell / Literate Unit-B",
             "selector": "source.haskell",
-            "working_dir": "${project_path}"
-        },{
-            "name": "nightly",
-            "cmd": [ "stack", "build"
-                   , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
-                   , "--test", "--no-run-tests"
-                   , "--resolver","nightly" 
-                   , "--stack-yaml", "$project_path/stack-nightly.yaml" ],
-        },{
-            "name": "nightly - test",
-            "cmd": [ "stack", "test"
-                   , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
-                   , "--test", "--no-run-tests"
-                   , "--resolver","nightly" 
-                   , "--stack-yaml", "$project_path/stack-nightly.yaml" ],
+            "working_dir": "${project_path}",
+            "variants": 
+                [ {
+                    "name": "nightly",
+                    "cmd": [ "stack", "build"
+                           , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
+                           , "--test", "--no-run-tests"
+                           , "--resolver","nightly" 
+                           , "--stack-yaml", "$project_path/stack-nightly.yaml" ],
+                },{
+                    "name": "nightly - test",
+                    "cmd": [ "stack", "test"
+                           , "--ghc-options", "-Wall -fno-warn-type-defaults -fno-warn-name-shadowing"
+                           , "--resolver","nightly" 
+                           , "--stack-yaml", "$project_path/stack-nightly.yaml" ]
+                } ]
         },{
             "cmd":
             [
@@ -62,7 +63,7 @@
             "folder_exclude_patterns": [".stack-work"],
             "file_include_patterns":
             [
-                "*.cabal", "stack.yaml", ".travis.yml"
+                "*.cabal", "stack*.yaml", ".travis.yml"
             ],
             "path": "."
         },

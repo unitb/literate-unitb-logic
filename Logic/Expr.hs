@@ -21,6 +21,7 @@ import Logic.Expr.Expr
 import Logic.Expr.Genericity hiding ( Generic, variables )
 import Logic.Expr.Label
 import Logic.Expr.PrettyPrint
-import Logic.Expr.Type
+import Logic.Expr.Type hiding (Typed(..))
+import Logic.Expr.Type (type_of)
 import Logic.Expr.Variable
 import Logic.Names hiding (language)

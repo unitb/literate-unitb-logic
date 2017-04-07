@@ -53,15 +53,17 @@ instance (Arbitrary t,Arbitrary n) => Arbitrary (AbsVar n t) where
 instance IsName n => Translatable (AbsVar n t) (AbsVar InternalName t) where
     translate = translate' asInternal
 
+instance (TypeSystem t) => Plated (AbsVar n t) where
+    plate _ = pure
 instance (TypeSystem t,IsName n) => Tree (AbsVar n t) where
     as_tree' (Var vn vt) = do
         t <- as_tree' vt
         return $ Expr.List [Str $ render vn, t]
-    rewriteM _ = pure
 
 instance (TypeSystem t) => Typed (AbsVar n t) where
     type TypeOf (AbsVar n t) = t
     type_of (Var _ t) = t
+    types  f (Var n t) = Var n <$> types f t 
 
 instance (TypeSystem t, IsName n) => PrettyPrintable (AbsVar n t) where
     pretty (Var n t) = render n ++ ": " ++ show (as_tree t)
