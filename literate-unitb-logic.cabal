@@ -102,6 +102,7 @@ library
         Logic.Theory.Monad
         Logic.UnitTest
         Logic.WellDefinedness
+        Z3.Applicative
         Z3.Z3
         -- TEST CASES
         Logic.Test

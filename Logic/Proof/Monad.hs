@@ -251,15 +251,16 @@ declareE str = do
     vs <- hoistEither $ get_variables'' ctx str (line_info str)
     mapM_ declare' . fmap snd $ vs
 
-parseDeclarations :: [Theory] -> StringLi -> Either [Error] [(Name, Var)]
-parseDeclarations ts str = withExpr $ do
-    mapM_ include ts
-    setting <- SequentM $ use _1
-    let ctx = contextOf setting
-    vs <- hoistEither $ get_variables'' ctx str (line_info str)
-    return vs
-    where
-        withExpr = runSequent'' :: SequentM a -> Either [Error] a
+-- parseDeclarations :: [Theory] -> StringLi -> Either [Error] [(Name, Var)]
+-- parseDeclarations ts str = withExpr $ do
+--     mapM_ include ts
+--     setting <- SequentM $ use _1
+--     let ctx = contextOf setting
+--     vs <- hoistEither $ get_variables'' ctx str (line_info str)
+--     return vs
+--     where
+--         withExpr = runSequent'' :: SequentM a -> Either [Error] a
+
 hoistEither :: MonadError [Error] m
             => Either [Error] a -> SequentT expr m a
 hoistEither = SequentM . either throwError return
