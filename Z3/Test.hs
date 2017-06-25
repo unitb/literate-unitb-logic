@@ -82,13 +82,13 @@ sample_ast = [
         assert $ M.fromJust $ strip_generics (f a ztrue `zless` zint 10),
         CheckSat ]
     where
-        f x y   = ($typeCheck) $ typ_fun2 ff (Right x) (Right y)
+        f x y   = fromRight' $ typ_fun2 ff (Right x) (Right y)
 
 sample_quant :: [Z3Command]
 sample_quant = [
         Decl (make' (FunDecl []) "f" [int] int),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) (mzforall [x'] mztrue (f x `mzless` mzint 10)),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) $ mznot (mzforall [x'] mztrue (f x `mzless` mzint 9)),
+        assert $ M.fromJust $ strip_generics $ fromRight' (mzforall [x'] mztrue (f x `mzless` mzint 10)),
+        assert $ M.fromJust $ strip_generics $ fromRight' $ mznot (mzforall [x'] mztrue (f x `mzless` mzint 9)),
         CheckSat ]
     where
         ff          = mk_fun' [] "f" [int] int
@@ -98,9 +98,9 @@ sample_proof :: Sequent
 sample_proof = Sequent 3000 1
         ( def & functions .~ symbol_table [mk_fun' [] "f" [int] int] )
         empty_monotonicity
-        [($typeCheck) $ mzforall [x'] mztrue (f x `mzless` mzint 10)]
+        [fromRight' $ mzforall [x'] mztrue (f x `mzless` mzint 10)]
         M.empty
-        (($typeCheck) $ mzforall [x'] mztrue (f x `mzless` mzint 12))
+        (fromRight' $ mzforall [x'] mztrue (f x `mzless` mzint 12))
     where
         ff          = mk_fun' [] "f" [int] int
         f           = typ_fun1 ff
@@ -108,8 +108,8 @@ sample_proof = Sequent 3000 1
 sample_quant2 :: [Z3Command]
 sample_quant2 = [
         Decl (make' (FunDecl []) "f" [int] int),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) (mzforall [x'] mztrue (f x `mzless` mzint 10)),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) (mzforall [x'] mztrue (f x `mzless` mzint 11)),
+        assert $ M.fromJust $ strip_generics $ fromRight' (mzforall [x'] mztrue (f x `mzless` mzint 10)),
+        assert $ M.fromJust $ strip_generics $ fromRight' (mzforall [x'] mztrue (f x `mzless` mzint 11)),
         CheckSat]
     where
         f           = typ_fun1 $ mk_fun' [] "f" [int] int
@@ -117,8 +117,8 @@ sample_quant2 = [
 sample_quant3 :: [Z3Command]
 sample_quant3 = [
         Decl (make' (FunDecl []) "f" [int] int),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) (mzforall [x'] mztrue (f x `mzless` mzint 10)),
-        assert $ M.fromJust $ strip_generics $ ($typeCheck) $ mznot (mzforall [x'] mztrue (f x `mzless` mzint 11)),
+        assert $ M.fromJust $ strip_generics $ fromRight' (mzforall [x'] mztrue (f x `mzless` mzint 10)),
+        assert $ M.fromJust $ strip_generics $ fromRight' $ mznot (mzforall [x'] mztrue (f x `mzless` mzint 11)),
         CheckSat] 
     where
         f           = typ_fun1 $ mk_fun' [] "f" [int] int
@@ -129,22 +129,22 @@ assert x = Assert x Nothing
 sample_calc :: Calculation
 sample_calc = (Calc  
         ctx
-        (  ($typeCheck)  ( (x `mzimplies` y) `mzimplies` (f x `mzimplies` f y) )  )
-                   ( ($typeCheck) (f x `mzimplies` f y) )
-        [ (equal,    ($typeCheck) (f x `mzeq` (f x `mzand` f y)),  [], li)
-        , (equal,    ($typeCheck) ( f x `mzeq` f (x `mzand` y) ),  [hyp], li)
-        , (follows,  ($typeCheck) ( x `mzeq` (x `mzand` y) ), [], li)
-        , (equal,    ($typeCheck) ( x `mzimplies` y ),        [], li) 
+        (  fromRight'  ( (x `mzimplies` y) `mzimplies` (f x `mzimplies` f y) )  )
+                   ( fromRight' (f x `mzimplies` f y) )
+        [ (equal,    fromRight' (f x `mzeq` (f x `mzand` f y)),  [], li)
+        , (equal,    fromRight' ( f x `mzeq` f (x `mzand` y) ),  [hyp], li)
+        , (follows,  fromRight' ( x `mzeq` (x `mzand` y) ), [], li)
+        , (equal,    fromRight' ( x `mzimplies` y ),        [], li) 
         ]
         li )
     where
         ctx = def & functions .~ symbol_table [ mk_fun' [] "f" [bool] bool ]
                   & definitions .~ symbol_table [ z3Def [] "follows" [x',y'] 
-                                    bool (($typeCheck) (y `mzimplies` x)) ]
+                                    bool (fromRight' (y `mzimplies` x)) ]
                   & constants .~ symbol_table ( (traverse.traverse1 %~ fromString'')
                                  [ Var "x" bool
                                  , Var "y" bool ] )
-        hyp         = ($typeCheck) $ mzforall 
+        hyp         = fromRight' $ mzforall 
             [x',y'] mztrue 
             ( (f (x `mzand` y) `mzeq` (f x `mzand` f y)) )
         (x,x')      = var "x" bool

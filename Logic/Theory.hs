@@ -75,9 +75,9 @@ basic_theory = make_theory' "basic" $ do
         (y,y_decl) = var "y" t1
 --        axm0 = fromJust $ mzforall [x_decl,y_decl] mztrue $
 --                mzeq x y `mzeq` mzeq_symb x y
-        axm0 = $typeCheck $ mzforall [x_decl,y_decl] mztrue $ 
+        axm0 = fromRight' $ mzforall [x_decl,y_decl] mztrue $ 
             zselect (zconst x) y .=. x
-        axm1 = $typeCheck $ mzforall [x_decl] mztrue $
+        axm1 = fromRight' $ mzforall [x_decl] mztrue $
             zselect zident x .=. x
 
 

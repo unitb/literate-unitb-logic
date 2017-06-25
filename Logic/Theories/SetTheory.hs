@@ -40,7 +40,7 @@ finite_fun :: IsName n => AbsFun n Type
 finite_fun = mk_fun [gA] (z3Name "finite") [set_type gA] bool
 
 zfinite :: Expr -> Expr
-zfinite e = ($typeCheck) (mzfinite $ Right e)
+zfinite e = fromRight' (mzfinite $ Right e)
 
 set_theory' :: Map Name Theory
 set_theory' = singleton (makeName "sets") set_theory
@@ -82,15 +82,15 @@ set_theory = Theory { .. }
                 , z3Def [gT] "all" [] (set_type gT) 
                         $ zlift (set_type gT) ztrue
                 , z3Def [gT] "elem" [x_decl, s1_decl] bool 
-                        $ ($typeCheck) (zset_select s1 x)
+                        $ fromRight' (zset_select s1 x)
                 , z3Def [gT] "set-diff" [s1_decl,s2_decl] (set_type gT)
-                        $ ($typeCheck) $ s1 `zintersect` 
+                        $ fromRight' $ s1 `zintersect` 
                             map_array (z3Name "not") (set_type gT) [s2]
                 , z3Def [gT] "compl" [s1_decl] (set_type gT)
-                        $ ($typeCheck) $ 
+                        $ fromRight' $ 
                             map_array (z3Name "not") (set_type gT) [s1]
                 , z3Def [gT] "st-subset" [s1_decl,s2_decl] bool
-                        $ ($typeCheck) $ (s1 `zsubset` s2)
+                        $ fromRight' $ (s1 `zsubset` s2)
                             `mzand`  mznot (s1 `mzeq` s2)
                 ]
         _funs = 
