@@ -55,7 +55,7 @@ instance IsName n => Translatable (AbsVar n t) (AbsVar InternalName t) where
 
 instance (TypeSystem t) => Plated (AbsVar n t) where
     plate _ = pure
-instance (TypeSystem t,IsName n) => Tree (AbsVar n t) where
+instance (Tree t,IsName n) => Tree (AbsVar n t) where
     as_tree' (Var vn vt) = do
         t <- as_tree' vt
         return $ Expr.List [Str $ render vn, t]
@@ -65,7 +65,7 @@ instance (TypeSystem t) => Typed (AbsVar n t) where
     type_of (Var _ t) = t
     types  f (Var n t) = Var n <$> types f t 
 
-instance (TypeSystem t, IsName n) => PrettyPrintable (AbsVar n t) where
+instance (Tree t, IsName n) => PrettyPrintable (AbsVar n t) where
     pretty (Var n t) = render n ++ ": " ++ show (as_tree t)
 
 instance Functor1 AbsVar where
@@ -93,6 +93,11 @@ instance HasNames (AbsVar n t) n where
 instance (IsName n,Typeable t) => Named (AbsVar n t) where
     type NameOf (AbsVar n t) = n
     decorated_name' (Var x _) = adaptName x
+
+instance (TypeSystem t, HasTypeVars t) => HasTypeVars (AbsVar n t) where
+    -- types_of (Var _ t)  = types_of t
+    -- generics f (Var n t) = Var n <$> generics f t 
+    -- variables f (Var n t) = Var n <$> variables f t 
 
 instance (Serialize n,Serialize t) => Serialize (AbsVar n t) where
 

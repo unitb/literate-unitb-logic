@@ -249,6 +249,9 @@ test = test_cases "genericity"
         , stringCase "Pattern matching on function application" case31 result31
         , aCase "parsing expressions encoded in arrays" case32 result32
         , aCase "basic subtyping: int <: real" case33 result33
+        , aCase "basic subtyping: set [int] <: set [real]" case34 result34
+        , aCase "basic subtyping: list [int] <: pfun [int,real]" case35 result35
+        , aCase "basic subtyping: record <: pfun [Name,Top]" case36 result36
         ]
     where
         reserved x n = addSuffix ("@" ++ show n) (fromString'' x)
@@ -370,8 +373,6 @@ instance Tree Integer where
     as_tree' = return . Str . show
 instance PrettyPrintable Integer where
     pretty = show
-instance TypeAnnotationPair Integer Integer where
-    strippedType = id
 instance TypeSystem Integer where
     make_type s = product . (toInteger (hash s):)
 instance Typed Integer where
@@ -778,3 +779,21 @@ case33 = return $ getExpr $ c [expr| p.x |]
 
 result33 :: Expr
 result33 = ztrue
+
+case34 :: IO Expr
+case34 = return zfalse
+
+result34 :: Expr
+result34 = ztrue
+
+case35 :: IO Expr
+case35 = return zfalse
+
+result35 :: Expr
+result35 = ztrue
+
+case36 :: IO Expr
+case36 = return zfalse
+
+result36 :: Expr
+result36 = ztrue

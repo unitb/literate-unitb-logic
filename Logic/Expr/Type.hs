@@ -17,10 +17,11 @@ import Control.Monad.Reader
 import Control.Precondition
 
 import           Data.Data
+import           Data.Void
 import           Data.Hashable
 import           Data.List
 import qualified Data.Map as M
-import qualified Data.Set as S
+-- import qualified Data.Set as S
 import           Data.Serialize
 
 import           GHC.Generics.Instances
@@ -34,14 +35,13 @@ import           Text.Printf.TH
 
 import           Utilities.Functor
 
-data GenericType = 
-        Gen !Sort ![GenericType] 
-        | GENERIC !InternalName
-        | VARIABLE !InternalName
-    deriving (Eq,Ord,Typeable,Generic,Data,Show)
+data GenericType' v = 
+        Gen !Sort ![GenericType' v] 
+        | GENERIC v
+    deriving (Eq,Ord,Typeable,Generic,Data,Show,Functor,Foldable,Traversable)
 
-data FOType      = FOT !Sort ![FOType]
-    deriving (Eq, Ord, Typeable, Generic, Show)
+-- type FOType      = FOT !Sort ![FOType]
+    -- deriving (Eq, Ord, Typeable, Generic, Show)
 
 data Sort =
         BoolSort | IntSort | RealSort 
@@ -62,48 +62,73 @@ data Sort =
 newtype Field = Field Name
     deriving (Eq, Ord, Show, Typeable, Data, Generic)
 
+type GenericType = GenericType' InternalName
 type Type = GenericType
+type FOType = GenericType' Void
 
-makePrisms ''FOType
-makePrisms ''GenericType
+newtype TypeVar = TypeVar { unTypeVar :: Int } 
+    deriving (Eq, Ord, Show, Generic, Enum)
+
+data Unif v = UnifVar TypeVar | FreeVar v
+    deriving (Functor,Foldable,Traversable
+             ,Eq,Show,Ord,Generic)
+
+-- makePrisms ''FOType
+makePrisms ''GenericType'
 makePrisms ''Sort
+makePrisms ''TypeVar
+makePrisms ''Unif
 
-newtype SubType = SubType { unSubType :: GenericType } 
-    deriving (Eq,Ord,Typeable,Generic,Data,Show,PrettyPrintable,Hashable)
+type OpenType v = GenericType' (Unif v)
 
-instance Rewrapped SubType SubType where
-instance Wrapped SubType where
-    type Unwrapped SubType = GenericType
+typeVar :: (TypeVar -> r) -> (v -> r) -> Unif v -> r
+typeVar f _ (UnifVar i) = f i
+typeVar _ f (FreeVar x) = f x
+
+
+newtype SubType' v = SubType { unSubType :: GenericType' v } 
+    deriving (Eq,Ord,Typeable,Generic,Data,Show
+             ,PrettyPrintable,Hashable
+             ,Functor,Foldable,Traversable
+             ,Applicative,Monad)
+
+type SubType = SubType' InternalName
+
+instance Rewrapped (SubType' v) (SubType' u) where
+instance Wrapped (SubType' v) where
+    type Unwrapped (SubType' v) = GenericType' v
     _Wrapped' = iso unSubType SubType
 
-referenced_types :: FOType -> S.Set FOType
-referenced_types t@(FOT _ ts) = S.insert t $ S.unions $ map referenced_types ts
+-- referenced_types :: FOType -> S.Set FOType
+-- referenced_types t@(FOT _ ts) = S.insert t $ S.unions $ map referenced_types ts
 
 class TypeOf a ~ TypeOf (TypeOf a) => Typed a where
     type TypeOf a :: *
     type_of :: a -> TypeOf a
     types :: Traversal' a (TypeOf a)
 
-instance Typed GenericType where
-    type TypeOf GenericType = GenericType
+instance Typed (GenericType' v) where
+    type TypeOf (GenericType' v) = GenericType' v
     type_of = id
     types _ = pure
 
-instance Typed SubType where
-    type TypeOf SubType = SubType
+instance Typed (SubType' v) where
+    type TypeOf (SubType' v) = SubType' v
     type_of = id
     types _ = pure
 
-class (Ord a, Tree a, PrettyPrintable a, Show a
-        , TypeAnnotationPair a a
-        , Typed a, TypeOf a ~ a, Typeable a
-        , Hashable a ) 
-        => TypeSystem a where
-    make_type :: Sort -> [a] -> a
-    _FromSort :: Prism' a (Sort,[a])
+-- class (Ord a, Tree a, PrettyPrintable a, Show a
+--         , TypeAnnotationPair a a
+--         , Typed a, TypeOf a ~ a, Typeable a
+--         , Hashable a ) 
+class (Typed t,TypeOf t ~ t,Typeable t,Tree t,PrettyPrintable t,Ord t) 
+        => TypeSystem t where
+    make_type :: Sort -> [t] -> t
+    _FromSort :: Prism' t (Sort,[t])
 
-class TypeSystem t => IsPolymorphic t where
+class (TypeSystem t,HasTypeVars t) => IsPolymorphic t where
     genericType' :: Iso' t GenericType
+    _GENERIC'  :: Prism' t InternalName
 
 genericType :: (IsPolymorphic a,IsPolymorphic b) 
             => Iso a b GenericType GenericType
@@ -114,49 +139,98 @@ genericType =
 
 instance IsPolymorphic GenericType where
     genericType' = id
+    _GENERIC'  = _GENERIC
 instance IsPolymorphic SubType where
     genericType' = _Wrapped
+    _GENERIC'  = _Wrapped._GENERIC'
 
-class TypeAnnotationPair a b where
-    strippedType :: b -> a
+class (Typed a,Plated a) => HasTypeVars a where
+    generics :: Traversal' a InternalName
+    -- variables :: Traversal' a InternalName
+    -- _VARIABLE' :: Prism' a InternalName
+    default generics :: HasTypeVars (TypeOf a) => Traversal' a InternalName
+    generics = types.generics
+    -- default variables :: HasTypeVars (TypeOf a) => Traversal' a InternalName
+    -- variables = types.variables
+    -- generics x  = S.fromList $ genericsList x
+    -- genericsList x  = concatMap genericsList $ S.toList $ types_of x
+    -- variables x = S.unions $ map variables $ S.toList $ types_of x
 
-instance TypeAnnotationPair () t where
-    strippedType _ = ()
+instance HasTypeVars (GenericType) where
+    generics f (GENERIC s) = GENERIC <$> f s
+    -- generics _f t@(VARIABLE _) = pure t
+    generics f (Gen s ts) = Gen s <$> (traverse.generics) f ts
+    -- variables f (VARIABLE s) = VARIABLE <$> f s
+    -- variables _f t@(GENERIC _) = pure t
+    -- variables f (Gen s ts) = Gen s <$> (traverse.variables) f ts
+    -- _VARIABLE' = _VARIABLE
+    -- genericsList (GENERIC s)     = [s]
+    -- genericsList (VARIABLE _)    = []
+    -- genericsList (Gen _ ts) = concatMap genericsList ts
+    -- variables (VARIABLE s)       = S.singleton s
+    -- variables (GENERIC _)        = S.empty
+    -- variables (Gen _ ts) = S.unions $ map variables ts
+    -- types_of t = S.singleton t
 
-instance TypeAnnotationPair SubType SubType where
-    strippedType = id
+instance HasTypeVars SubType where
+    generics   = _Wrapped.generics
+    -- variables  = _Wrapped.variables
+    -- _VARIABLE' = _
+
+-- class TypeAnnotationPair a b where
+--     strippedType :: b -> a
+
+-- instance TypeAnnotationPair () t where
+--     strippedType _ = ()
+
+-- instance TypeAnnotationPair (SubType' v) (SubType' v) where
+--     strippedType = id
     
-instance TypeAnnotationPair GenericType GenericType where
-    strippedType = id
+-- instance TypeAnnotationPair (GenericType' v) (GenericType' v) where
+--     strippedType = id
 
-instance TypeAnnotationPair FOType FOType where
-    strippedType = id
+-- instance TypeAnnotationPair FOType FOType where
+--     strippedType = id
 
-instance TypeSystem SubType where
+class (Ord v,Typeable v,PrettyPrintable v) => IsTypeVar v where
+
+instance IsTypeVar InternalName where
+instance IsTypeVar Void where
+instance IsTypeVar v => IsTypeVar (Unif v) where
+
+instance IsTypeVar v 
+        => TypeSystem (SubType' v) where
     make_type ss = SubType . make_type ss . map unSubType
     _FromSort f = dimap unSubType (fmap SubType) $ _FromSort $ dimap 
             (_2.traverse %~ SubType) 
             (mapped._2.traverse %~ unSubType) f
-instance TypeSystem GenericType where
+instance IsTypeVar v 
+        => TypeSystem (GenericType' v) where
     make_type ss = Gen ss . evalList
     _FromSort    = _Gen . mapping (iso id evalList)
 
-instance Typed FOType where
-    type TypeOf FOType = FOType
-    type_of = id
-    types _ = pure
+-- instance Typed FOType where
+--     type TypeOf FOType = FOType
+--     type_of = id
+--     types _ = pure
 
-instance TypeSystem FOType where
-    make_type ss = FOT ss . evalList
-    _FromSort   = _FOT . mapping (iso id evalList)
+-- instance TypeSystem FOType where
+--     make_type ss = Gen ss . evalList
+--     _FromSort   = _Gen . mapping (iso id evalList)
+
+instance PrettyPrintable v => PrettyPrintable (Unif v) where
+    pretty (UnifVar i) = "@" ++ show i
+    pretty (FreeVar x) = pretty x
 
 instance PrettyPrintable Sort where
     pretty (RecordSort m) = [s|{ %s }|] $ intercalate ", " 
                 $ zipWith (\f -> [s|'%s :: a%d|] (fieldName f)) (M.keys m) [0..]
     pretty ss = render $ ss^.name
 
-instance Hashable FOType where
-instance Hashable GenericType where
+-- instance Hashable FOType where
+instance Hashable TypeVar where
+instance Hashable v => Hashable (Unif v) where
+instance Hashable v => Hashable (GenericType' v) where
 instance Hashable Sort where
 instance Hashable Field where
 
@@ -169,34 +243,41 @@ instance TypeSystem () where
     make_type _ _ = ()
     _FromSort = prism' (const ()) (const Nothing)
 
-instance Plated SubType where
-instance Tree SubType where
+instance Plated (SubType' t) where
+    plate f (SubType t) = SubType <$> plate (_Unwrapped' f) t
+instance PrettyPrintable v => Tree (SubType' v) where
     as_tree' = as_tree' . unSubType
     -- {-# INLINABLE rewriteM #-}
     -- rewriteM = _Wrapped'.rewriteM._Unwrapped'
-instance Plated GenericType where
+instance Plated (GenericType' t) where
     {-# INLINABLE plate #-}
     plate f (Gen ss ts) = do
             Gen ss <$> traverse f ts
-    plate _ x@(VARIABLE _) = pure x
-    plate _ x@(GENERIC _)  = pure x
-instance Tree GenericType where
+    plate _ x@(GENERIC _) = pure x
+instance PrettyPrintable v => Tree (GenericType' v) where
     as_tree' (Gen ss ts) = cons_to_tree ss ts
-    as_tree' (GENERIC x)   = return $ Str $ render x
-    as_tree' (VARIABLE n)  = return $ Str $ "_" ++ render n
+    as_tree' (GENERIC x)   = return $ Str $ "'" ++ pretty x
 
-instance Plated FOType where
-    {-# INLINABLE plate #-}
-    plate f (FOT ss ts) = FOT ss <$> traverse f ts
+instance Applicative GenericType' where
+    pure = GENERIC
+    (<*>) = ap
+instance Monad GenericType' where
+    Gen s ts  >>= f = Gen s $ map (>>= f) ts
+    GENERIC x >>= f = f x
 
-instance Tree FOType where
-    as_tree' (FOT ss ts) = cons_to_tree ss ts
+
+-- instance Plated FOType where
+--     {-# INLINABLE plate #-}
+--     plate f (FOT ss ts) = FOT ss <$> traverse f ts
+
+-- instance Tree FOType where
+--     as_tree' (FOT ss ts) = cons_to_tree ss ts
 
 instance Lift GenericType where
     lift = genericLift
 
-as_generic :: FOType -> GenericType
-as_generic (FOT ss ts) = Gen ss (map as_generic ts)
+as_generic :: FOType -> GenericType' a
+as_generic = fmap absurd
 
 cons_to_tree :: Tree a => Sort -> [a] -> Reader (OutputMode n) StrList
 cons_to_tree ss [] = do
@@ -221,16 +302,15 @@ typeParams (Sort _ _ n) = n
 typeParams (DefSort _ _ ps _) = length ps
 typeParams (Datatype xs _ _)  = length xs
 
-instance PrettyPrintable FOType where
-    pretty (FOT ss []) = (render $ z3_name ss)
-    pretty (FOT t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
+-- instance PrettyPrintable FOType where
+--     pretty (FOT ss []) = (render $ z3_name ss)
+--     pretty (FOT t ts) = [s|%s %s|] (render $ t^.name) (show $ map Pretty ts)
 
 instance PrettyPrintable Field where
     pretty (Field n) = pretty n
 
-instance PrettyPrintable GenericType where
-    pretty (GENERIC n)         = "_" ++ render n 
-    pretty (VARIABLE n)        = "'" ++ render n 
+instance PrettyPrintable v => PrettyPrintable (GenericType' v) where
+    pretty (GENERIC n)        = "'" ++ pretty n 
     pretty (Gen (RecordSort m) xs) = [s|{ %s }|] $ intercalate ", " 
                 $ zipWith (\f t -> [s|'%s :: %s|] (fieldName f) (pretty t)) (M.keys m) xs
     pretty (Gen ss []) = render $ ss^.name
@@ -395,10 +475,10 @@ z3GENERIC :: Pre
           => String -> GenericType
 z3GENERIC = GENERIC . fromString''
 
-z3_decoration :: TypeSystem t => t -> String
+z3_decoration :: Tree t => t -> String
 z3_decoration t = runReader (z3_decoration' t) ProverOutput
 
-z3_decoration' :: TypeSystem t => t -> Reader (OutputMode n) String
+z3_decoration' :: Tree t => t -> Reader (OutputMode n) String
 z3_decoration' t = do
         opt <- ask 
         case opt of

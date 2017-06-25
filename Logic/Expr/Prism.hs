@@ -30,9 +30,9 @@ fun = QuasiQuoter
 selectFun :: Eq n => n -> Traversal' (GenExpr n t a q) [GenExpr n t a q]
 selectFun x = _FunApp . selectFun' x
 
-selectFun' :: Eq n => n -> Traversal' (AbsFun n a,[GenExpr n t a q]) [GenExpr n t a q]
-selectFun' fn f (fn',args') | fn == (fn'^.name) = (fn',) <$> f args'
-                            | otherwise         = pure (fn',args')
+selectFun' :: Eq n => n -> Traversal' (AbsFun n a,[GenExpr n t a q],t) [GenExpr n t a q]
+selectFun' fn f (fn',args',t') | fn == (fn'^.name) = (fn',,t') <$> f args'
+                               | otherwise         = pure (fn',args',t')
 
 matchLength :: Int 
             -> ( [GenExpr n t a q] -> k )

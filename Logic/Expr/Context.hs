@@ -83,7 +83,7 @@ instance (Ord n) => HasSymbols (GenContext n t q) () n where
             (Context _ a b c _) = ctx^.genContext
             f = M.map (const ())
 
-merge_ctx :: (TypeSystem t, IsQuantifier q,IsName n)
+merge_ctx :: (TypeSystem t, IsQuantifier q,IsName n,Show t)
           => GenContext n t q -> GenContext n t q 
           -> GenContext n t q
 merge_ctx (Context ss0 vs0 fs0 ds0 dum0) (Context ss1 vs1 fs1 ds1 dum1) = 

@@ -101,7 +101,7 @@ instance HasNames (AbsFun n t) n where
     type SetNameT n' (AbsFun n t) = AbsFun n' t
     namesOf = traverse1
 
-instance (IsName n,TypeSystem t) => Named (AbsFun n t) where
+instance (IsName n,Tree t,Typeable t) => Named (AbsFun n t) where
     type NameOf (AbsFun n t) = n
     decorated_name' (Fun ts x _ _ _ _) = do
             ts' <- mapM z3_decoration' ts
@@ -139,11 +139,20 @@ type InternalFun = AbsFun InternalName Type
 instance Plated (AbsFun n t) where
     plate _ = pure
 
-instance (IsName n,TypeSystem t) => Tree (AbsFun n t) where
+instance (IsName n,Tree t,Typeable t) => Tree (AbsFun n t) where
     as_tree' f@(Fun _ _ _ argT rT _) = Expr.List <$> sequenceA
             [ Str  <$> render_decorated f
             , Expr.List <$> mapM as_tree' argT 
             , as_tree' rT ]
+
+instance (HasTypeVars t, TypeSystem t) => HasTypeVars (AbsFun n t) where
+    -- types_of (Fun _ _ _ ts t _) = S.unions $ L.map types_of $ t : ts
+    -- generics f (Fun ps n l ts t w) = Fun ps n l <$> (traverse.generics) f ts 
+    --                                              <*> generics f t 
+    --                                              <*> pure w
+    -- variables f (Fun ps n l ts t w) = Fun ps n l <$> (traverse.variables) f ts 
+    --                                               <*> variables f t 
+    --                                               <*> pure w
 
 instance (Serialize n,Serialize t) => Serialize (AbsFun n t) where
 instance Serialize SetWD where
